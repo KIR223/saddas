@@ -103,7 +103,7 @@ body.adm-state-app .adm-shell {
   color: var(--adm-muted);
 }
 
-.adm-form input,
+.adm-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 .adm-form select,
 .adm-form textarea {
   width: 100%;
@@ -116,7 +116,7 @@ body.adm-state-app .adm-shell {
   font: inherit;
 }
 
-.adm-form input:focus,
+.adm-form input:not([type="checkbox"]):not([type="radio"]):focus,
 .adm-form select:focus,
 .adm-form textarea:focus {
   outline: 2px solid var(--accent, #5b4dff);
@@ -544,12 +544,34 @@ body.adm-state-app .adm-shell {
 .adm-checkbox-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 8px 0;
+  gap: 10px;
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--adm-border);
+  background: var(--adm-surface-2);
+  color: var(--adm-text);
+}
+
+.adm-checkbox-row input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  margin: 0;
+  flex: none;
+  accent-color: var(--accent);
+  cursor: pointer;
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
 }
 
 .adm-checkbox-row label {
   font-size: 0.875rem;
+  color: var(--adm-text);
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
 }
 
 .adm-toast-actions {

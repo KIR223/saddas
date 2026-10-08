@@ -477,35 +477,69 @@ function renderWizardStepBody() {
   if (subWizard.step === 1) {
     const g = scheduleData.groups[subWizard.group];
     const lessons = g?.days[String(subWizard.day)] || [];
-    wrap.appendChild(el('p', 'adm-muted', 'Выберите пару для замены или отмены'));
+    wrap.appendChild(el('p', 'adm-muted', 'Выберите пару из списка (или отфильтруйте поиском)'));
+
     const pField = el('div', 'field');
-    pField.appendChild(el('label', '', 'Пара'));
+    pField.appendChild(el('label', '', 'Поиск пары'));
+    const filter = document.createElement('input');
+    filter.type = 'search';
+    filter.placeholder = 'Начните вводить предмет…';
+    filter.autocomplete = 'off';
+    pField.appendChild(filter);
+
+    const selField = el('div', 'field');
+    selField.appendChild(el('label', '', 'Пара'));
     const pSel = document.createElement('select');
-    if (!lessons.length) {
-      const o = document.createElement('option');
-      o.value = '';
-      o.textContent = 'Нет пар в расписании';
-      pSel.appendChild(o);
-    } else {
-      lessons.forEach((l) => {
+    pSel.setAttribute('aria-label', 'Пара для замены');
+
+    const fillOptions = (q = '') => {
+      const needle = String(q || '').trim().toLowerCase();
+      clear(pSel);
+      const filtered = lessons.filter((l) => {
+        if (!needle) return true;
+        const hay = `${l.pair} ${l.subject} ${l.teacher || ''} ${l.room || ''}`.toLowerCase();
+        return hay.includes(needle);
+      });
+      if (!filtered.length) {
+        const o = document.createElement('option');
+        o.value = '';
+        o.textContent = lessons.length ? 'Ничего не найдено' : 'Нет пар в расписании';
+        pSel.appendChild(o);
+        subWizard.lessonId = '';
+        return;
+      }
+      filtered.forEach((l) => {
         const o = document.createElement('option');
         o.value = l.id;
-        o.textContent = `${l.pair}. ${l.subject}`;
+        o.textContent = `${l.pair}. ${l.subject}${l.teacher ? ` — ${l.teacher}` : ''}`;
         if (l.id === subWizard.lessonId) o.selected = true;
         pSel.appendChild(o);
       });
-      if (!subWizard.lessonId && lessons[0]) {
-        subWizard.lessonId = lessons[0].id;
-        subWizard.pair = lessons[0].pair;
+      if (!filtered.some((l) => l.id === subWizard.lessonId)) {
+        subWizard.lessonId = filtered[0].id;
+        subWizard.pair = filtered[0].pair;
+        pSel.value = filtered[0].id;
       }
+    };
+
+    fillOptions();
+    if (!subWizard.lessonId && lessons[0]) {
+      subWizard.lessonId = lessons[0].id;
+      subWizard.pair = lessons[0].pair;
+      fillOptions();
     }
+
+    filter.addEventListener('input', () => {
+      fillOptions(filter.value);
+      scheduleDraftSave();
+    });
     pSel.addEventListener('change', () => {
       subWizard.lessonId = pSel.value;
       const les = lessons.find((x) => x.id === pSel.value);
       if (les) subWizard.pair = les.pair;
       scheduleDraftSave();
     });
-    pField.appendChild(pSel);
+    selField.appendChild(pSel);
 
     const cancelRow = el('div', 'adm-checkbox-row');
     const cancelCb = document.createElement('input');
@@ -519,7 +553,7 @@ function renderWizardStepBody() {
     const cancelLbl = el('label', '', 'Отменить пару (без замены)');
     cancelLbl.htmlFor = 'wiz-cancel';
     cancelRow.append(cancelCb, cancelLbl);
-    wrap.append(pField, cancelRow);
+    wrap.append(pField, selField, cancelRow);
     return wrap;
   }
 
