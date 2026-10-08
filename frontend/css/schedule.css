@@ -3,6 +3,7 @@
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
+  padding-left: calc(var(--space-4) + 6px);
   margin-bottom: var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--surface-grad);
@@ -10,16 +11,19 @@
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   animation: fade-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .now-widget::before {
   content: "";
   position: absolute;
-  inset: 0 auto 0 0;
+  inset-block: 12px;
+  left: 0;
   width: 4px;
   background: var(--hero-grad);
-  border-radius: 4px 0 0 4px;
+  border-radius: 4px;
+  z-index: 1;
 }
 
 .now-widget__label {
@@ -68,6 +72,7 @@
   grid-template-columns: 72px 1fr;
   gap: var(--space-3);
   padding: var(--space-4);
+  padding-left: calc(var(--space-4) + 6px);
   margin-bottom: var(--space-3);
   border-radius: var(--radius-lg);
   background: var(--bg-elev);
@@ -80,16 +85,18 @@
     box-shadow var(--transition);
   animation: fade-up 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .lesson-card::before {
   content: "";
   position: absolute;
+  inset-block: 12px;
   left: 0;
-  top: 0;
-  bottom: 0;
-  width: 5px;
+  width: 4px;
   background: var(--hero-grad);
+  border-radius: 4px;
+  z-index: 1;
 }
 
 .lesson-card:active {

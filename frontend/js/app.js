@@ -9,7 +9,7 @@ import { el, clear, setText } from './utils/dom.js';
 import {
   loadSchedule, saveSchedule, hasSchedule, loadFlags, saveFlags, subscribe,
 } from './storage/store.js';
-import { listGroups, getIsoWeekday, DAY_SHORT, createEmptySchedule } from './models/schedule.js';
+import { listGroups, getIsoWeekday, DAY_SHORT, createEmptySchedule, filterByWeek } from './models/schedule.js';
 import { parseHashGroup, setHashGroup, clearHashGroup } from './utils/share.js';
 import { initPwa } from './utils/pwa.js';
 import { renderNowWidget, tickNowTimers } from './views/now.js';
@@ -25,6 +25,9 @@ import { pushRecentGroup } from './utils/groups-pref.js';
 import {
   syncBootstrap, syncGroup, syncRemainingGroups, syncFullFromApi,
 } from './api/sync.js';
+import { fetchAndMergeDay, dateKeyForIsoWeekday } from './api/overrides.js';
+import { clearServerDayCache } from './models/substitutions.js';
+import { getMelmkWeekType } from './models/bells.js';
 import { openExportSheet } from './views/export-sheet.js';
 
 /** @type {import('./models/schedule.js').ScheduleData} */
@@ -43,6 +46,9 @@ let searchInputRef = null;
 let prefetchStarted = false;
 let showSearchPanel = false;
 let refreshing = false;
+/** @type {string} */
+let dayHydrateKey = '';
+let dayHydrating = false;
 
 function readUrlState() {
   try {
@@ -94,6 +100,54 @@ function startPrefetch() {
   }).catch((e) => console.warn('prefetch', e));
 }
 
+/**
+ * Подтянуть /api/schedule/day для видимых дат (замены из БД)
+ */
+async function hydrateDayOverrides() {
+  if (!state || !currentGroup || dayHydrating) return;
+  const g = state.groups[currentGroup];
+  if (!g) return;
+
+  const dates = [];
+  if (scheduleMode === 'day') {
+    dates.push({ day: selectedDay, key: dateKeyForIsoWeekday(selectedDay) });
+    const today = getIsoWeekday();
+    if (today !== selectedDay && today >= 1 && today <= 6) {
+      dates.push({ day: today, key: dateKeyForIsoWeekday(today) });
+    }
+  } else if (scheduleMode === 'week') {
+    for (let d = 1; d <= 6; d++) {
+      dates.push({ day: d, key: dateKeyForIsoWeekday(d) });
+    }
+  } else {
+    const today = getIsoWeekday();
+    if (today >= 1 && today <= 6) {
+      dates.push({ day: today, key: dateKeyForIsoWeekday(today) });
+    }
+  }
+
+  const stamp = `${currentGroup}|${scheduleMode}|${selectedDay}|${dates.map((x) => x.key).join(',')}`;
+  if (stamp === dayHydrateKey) return;
+  dayHydrating = true;
+  try {
+    const parity = getMelmkWeekType() === 'green' ? 'odd' : 'even';
+    let changed = false;
+    await Promise.all(dates.map(async ({ day, key }) => {
+      try {
+        const base = filterByWeek(g.days[String(day)] || [], parity);
+        await fetchAndMergeDay(currentGroup, key, base, day);
+        changed = true;
+      } catch (e) {
+        console.warn('day override', key, e);
+      }
+    }));
+    dayHydrateKey = stamp;
+    if (changed) render();
+  } finally {
+    dayHydrating = false;
+  }
+}
+
 async function refreshData() {
   if (refreshing) return;
   refreshing = true;
@@ -102,6 +156,8 @@ async function refreshData() {
   btn?.setAttribute('disabled', 'true');
   try {
     toast('Обновление…', 'info', 1500);
+    clearServerDayCache();
+    dayHydrateKey = '';
     const { data, changedIds } = await syncFullFromApi(apiWeek);
     state = data;
     prefetchStarted = true;
@@ -128,6 +184,7 @@ async function refreshData() {
 
 async function selectGroup(g) {
   currentGroup = g || '';
+  dayHydrateKey = '';
   if (currentGroup) {
     pushRecentGroup(currentGroup);
     setHashGroup(currentGroup);
@@ -341,8 +398,12 @@ function render() {
   });
 
   writeUrlState();
-  if (tab === 'home') renderHome(main);
-  else if (tab === 'bells') renderBellsView(main);
+  if (tab === 'home') {
+    renderHome(main);
+    if (currentGroup) {
+      queueMicrotask(() => { hydrateDayOverrides(); });
+    }
+  } else if (tab === 'bells') renderBellsView(main);
   else if (tab === 'teachers') {
     startPrefetch();
     renderTeachers(main, state);

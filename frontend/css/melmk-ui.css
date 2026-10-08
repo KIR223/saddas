@@ -55,9 +55,12 @@
   background: var(--bg-elev);
   border-radius: var(--radius-card);
   padding: 16px;
+  padding-left: 22px;
   box-shadow: var(--shadow-md);
   margin-bottom: 14px;
   border: 1px solid transparent;
+  overflow: hidden;
+  isolation: isolate;
 }
 .now-widget__friendly {
   margin: 0 0 12px;
@@ -395,10 +398,14 @@
   background: var(--bg-elev);
   border-radius: var(--radius-card);
   padding: 14px;
+  padding-left: 20px;
   box-shadow: var(--shadow-sm);
-  border-left: 4px solid var(--accent);
+  /* полоска — только ::before в schedule.css, без border-left (иначе торчит квадрат) */
+  border-left: none;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.2s ease;
+  overflow: hidden;
+  isolation: isolate;
   -webkit-tap-highlight-color: transparent;
 }
 .lesson-card:active { transform: scale(0.98); }
@@ -467,21 +474,21 @@
   color: var(--text);
 }
 
-/* Цвета предметов */
-.lesson-card.subj-math { border-left-color: #5b7cfa; }
-.lesson-card.subj-it { border-left-color: #3d8b6e; }
-.lesson-card.subj-phys { border-left-color: #7c6bb0; }
-.lesson-card.subj-chem { border-left-color: #c4785a; }
-.lesson-card.subj-bio { border-left-color: #4a9a6e; }
-.lesson-card.subj-hist { border-left-color: #9a7b56; }
-.lesson-card.subj-lang { border-left-color: #2a7a8c; }
-.lesson-card.subj-eng { border-left-color: #3b82b6; }
-.lesson-card.subj-pe { border-left-color: #5a9e4a; }
-.lesson-card.subj-eco { border-left-color: #8b6b3d; }
-.lesson-card.subj-tour { border-left-color: #2a9aad; }
-.lesson-card.subj-law { border-left-color: #6b5b95; }
-.lesson-card.subj-curator { border-left-color: var(--accent); }
-.lesson-card.subj-default { border-left-color: var(--border); }
+/* Цвета предметов — через ::before */
+.lesson-card.subj-math::before { background: #5b7cfa; }
+.lesson-card.subj-it::before { background: #3d8b6e; }
+.lesson-card.subj-phys::before { background: #7c6bb0; }
+.lesson-card.subj-chem::before { background: #c4785a; }
+.lesson-card.subj-bio::before { background: #4a9a6e; }
+.lesson-card.subj-hist::before { background: #9a7b56; }
+.lesson-card.subj-lang::before { background: #2a7a8c; }
+.lesson-card.subj-eng::before { background: #3b82b6; }
+.lesson-card.subj-pe::before { background: #5a9e4a; }
+.lesson-card.subj-eco::before { background: #8b6b3d; }
+.lesson-card.subj-tour::before { background: #2a9aad; }
+.lesson-card.subj-law::before { background: #6b5b95; }
+.lesson-card.subj-curator::before { background: var(--accent); }
+.lesson-card.subj-default::before { background: var(--border); }
 
 /* Звонки */
 .bells-head {

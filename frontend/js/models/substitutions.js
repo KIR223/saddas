@@ -1,5 +1,6 @@
 /**
- * Замены пар с датами действия
+ * Замены пар с датами действия.
+ * Источник правды для публичной страницы — серверные day-overrides (кэш ниже).
  */
 
 import { createLesson, genId, cloneData, getPairTimesForDay } from './schedule.js';
@@ -19,15 +20,49 @@ import { createLesson, genId, cloneData, getPairTimesForDay } from './schedule.j
  * @property {object} [original]
  */
 
+/** @type {Map<string, import('./schedule.js').Lesson[]>} */
+const serverDayCache = new Map();
+
 /**
- * @param {Date} [date]
+ * @param {Date|string} [date]
  * @returns {string} YYYY-MM-DD
  */
 export function toDateKey(date = new Date()) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+  const d = typeof date === 'string' ? new Date(`${date}T12:00:00`) : date;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** @param {string} group @param {string} dateKey */
+function serverKey(group, dateKey) {
+  return `${group}|${dateKey}`;
+}
+
+/**
+ * Кэш дня с API (уже с учётом замен)
+ * @param {string} group
+ * @param {string} dateKey
+ * @param {import('./schedule.js').Lesson[]} lessons
+ */
+export function setServerDay(group, dateKey, lessons) {
+  serverDayCache.set(serverKey(group, dateKey), lessons);
+}
+
+/**
+ * @param {string} group
+ * @param {string} dateKey
+ * @returns {import('./schedule.js').Lesson[]|null}
+ */
+export function getServerDay(group, dateKey) {
+  return serverDayCache.get(serverKey(group, dateKey)) || null;
+}
+
+/** Сброс кэша дней (после полного refresh) */
+export function clearServerDayCache() {
+  serverDayCache.clear();
 }
 
 /**
@@ -52,6 +87,12 @@ export function isSubActive(sub, date = new Date()) {
  * @param {Date} [date]
  */
 export function applySubstitutions(lessons, data, group, day, date = new Date()) {
+  const dateKey = toDateKey(date);
+  const fromServer = getServerDay(group, dateKey);
+  if (fromServer) {
+    return fromServer.map((l) => ({ ...l }));
+  }
+
   const dayKey = String(day);
   const subs = (data.substitutions || []).filter(
     (s) => s.group === group && String(s.day) === dayKey && isSubActive(s, date)

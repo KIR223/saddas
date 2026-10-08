@@ -26,7 +26,8 @@ import { parseFile } from '../js/parser/excel.js';
 import { autoMap, rowsToSchedule } from '../js/parser/mapper.js';
 import { exportJson, exportCsv, exportIcs, printSchedule } from '../js/export/export.js';
 import { uploadAndSync } from '../js/api/sync.js';
-import { getAdminToken } from '../js/api/config.js';
+import { getAdminToken, setAdminToken, apiOrigin } from '../js/api/config.js';
+import { pushSubstitutionToApi, removeSubstitutionFromApi } from '../js/api/overrides.js';
 import { LS, APP_NAME } from '../js/config.js';
 import {
   renderScheduleEditor, renderTeachersEditor, renderRoomsEditor,
@@ -785,13 +786,19 @@ async function onWizardNext() {
   if (subWizard.editId) {
     updateSubstitution(scheduleData, subWizard.editId, payload);
     pushAudit('sub_update', `${payload.group} д${payload.day} п${payload.pair}`);
-    toast('Замена обновлена', 'success');
   } else {
     addSubstitution(scheduleData, payload);
     pushAudit('sub_add', `${payload.group} д${payload.day} п${payload.pair}`);
-    toast('Замена добавлена', 'success');
   }
   await persistSchedule();
+
+  const apiResult = await pushSubstitutionToApi(payload);
+  if (!apiResult.ok) {
+    toast(apiResult.error || 'Не удалось записать замену в БД', 'error', 6000);
+  } else {
+    toast(`Сохранено: ${apiResult.summary}`, 'success', 5000);
+  }
+
   subWizard = defaultWizardDraft();
   clearSubDraftStorage();
   renderSection();
@@ -826,9 +833,26 @@ function renderSubList() {
     clearSubstitutions(scheduleData);
     await persistSchedule();
     pushAudit('sub_clear_all', `${backup.length} записей`);
+    if (getAdminToken()) {
+      let apiErrors = 0;
+      for (const s of backup) {
+        try {
+          await removeSubstitutionFromApi(s);
+        } catch {
+          apiErrors += 1;
+        }
+      }
+      if (apiErrors) toast(`Локально очищено; ошибок API: ${apiErrors}`, 'warn', 5000);
+      else toast('Все замены удалены из БД', 'success');
+    } else {
+      toast('Локально очищено (нет токена API)', 'warn', 4000);
+    }
     toastUndo('Все замены удалены', async () => {
       scheduleData.substitutions = backup;
       await persistSchedule();
+      for (const s of backup) {
+        try { await pushSubstitutionToApi(s); } catch { /* ignore */ }
+      }
       renderSection();
     });
     renderSection();
@@ -903,9 +927,22 @@ function renderSubList() {
         removeSubstitution(scheduleData, s.id);
         await persistSchedule();
         pushAudit('sub_remove', copy.group);
+        try {
+          if (getAdminToken()) {
+            await removeSubstitutionFromApi(copy);
+            toast('Замена удалена из БД', 'success');
+          } else {
+            toast('Локально удалено (нет токена API — в БД могло остаться)', 'warn', 4500);
+          }
+        } catch (e) {
+          toast(e.message || 'Локально удалено, ошибка API', 'error', 5000);
+        }
         toastUndo('Замена удалена', async () => {
           scheduleData.substitutions.unshift(copy);
           await persistSchedule();
+          try {
+            await pushSubstitutionToApi(copy);
+          } catch { /* ignore */ }
           renderSection();
         });
         renderSection();
@@ -1056,6 +1093,29 @@ function validateAndShowErrors(cfg, errBox) {
 function renderData(root) {
   const sec = el('section', 'adm-section');
   sec.appendChild(el('h2', 'adm-section__title', 'Расписание и импорт'));
+
+  const tokenCard = el('div', 'adm-card');
+  tokenCard.appendChild(el('h3', 'adm-card__title', 'Токен API (БД)'));
+  tokenCard.appendChild(el('p', 'adm-muted', `Сервер: ${apiOrigin()}. Без токена замены остаются только в браузере.`));
+  const tokenField = el('div', 'field');
+  const tokenLabel = el('label', '', 'x-admin-token');
+  tokenLabel.htmlFor = 'adm-api-token';
+  const tokenInput = document.createElement('input');
+  tokenInput.id = 'adm-api-token';
+  tokenInput.type = 'password';
+  tokenInput.autocomplete = 'off';
+  tokenInput.placeholder = 'Токен с сервера';
+  tokenInput.value = getAdminToken();
+  tokenField.append(tokenLabel, tokenInput);
+  const tokenSave = el('button', 'btn btn--primary btn--block', 'Сохранить токен');
+  tokenSave.type = 'button';
+  tokenSave.addEventListener('click', () => {
+    setAdminToken(tokenInput.value.trim());
+    toast(tokenInput.value.trim() ? 'Токен сохранён' : 'Токен очищен', 'success');
+    renderSection();
+  });
+  tokenCard.append(tokenField, tokenSave);
+  sec.appendChild(tokenCard);
 
   const imp = el('div', 'adm-card');
   imp.appendChild(el('h3', 'adm-card__title', 'Excel'));

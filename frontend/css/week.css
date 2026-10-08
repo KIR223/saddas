@@ -86,15 +86,28 @@
 }
 
 .week-lesson {
-  padding: 8px 10px;
+  position: relative;
+  padding: 8px 10px 8px 14px;
   margin-bottom: 6px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--accent-soft), var(--bg-muted));
-  border-left: 3px solid var(--accent);
+  border-left: none;
+  overflow: hidden;
+  isolation: isolate;
   font-size: 0.75rem;
   line-height: 1.35;
   box-shadow: var(--shadow-sm);
   transition: transform 140ms ease, box-shadow var(--transition);
+}
+
+.week-lesson::before {
+  content: "";
+  position: absolute;
+  inset-block: 8px;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
 }
 
 .week-lesson:hover {
@@ -110,7 +123,10 @@
 
 .week-lesson.is-changed {
   background: var(--changed);
-  border-left-color: var(--accent-3);
+}
+
+.week-lesson.is-changed::before {
+  background: var(--accent-3);
 }
 
 .week-lesson__subj {
