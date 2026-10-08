@@ -16,8 +16,12 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           password: ${{ secrets.DEPLOY_PASSWORD }}
+          command_timeout: 20m
           script: |
-            set -e
+            set -euo pipefail
             cd /opt/melmk-schedule
-            git pull origin main
+            # force-push main не даёт обычный git pull — берём remote как есть
+            git fetch origin main
+            git checkout -B main
+            git reset --hard origin/main
             docker compose up -d --build
