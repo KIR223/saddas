@@ -8,6 +8,12 @@
 }
 
 /* —— Вход —— */
+/* display:flex перекрывает HTML [hidden] — явно прячем */
+.adm-login[hidden],
+.adm-shell[hidden] {
+  display: none !important;
+}
+
 .adm-login {
   min-height: 100dvh;
   display: flex;

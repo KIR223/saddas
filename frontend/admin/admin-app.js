@@ -17,6 +17,7 @@ import {
 } from '../js/models/substitutions.js';
 import {
   listGroups, listTeachers, listRooms, DAY_NAMES, createLesson, ensureCatalog,
+  createEmptySchedule,
 } from '../js/models/schedule.js';
 import { pushAudit, loadAudit, clearAudit } from '../js/utils/audit.js';
 import { toast } from '../js/utils/toast.js';
@@ -138,16 +139,38 @@ function bindActivity() {
 }
 
 function showLogin() {
-  adminApp.hidden = true;
-  loginScreen.hidden = false;
   logout();
+  if (adminApp) {
+    adminApp.hidden = true;
+    adminApp.setAttribute('hidden', '');
+  }
+  if (loginScreen) {
+    loginScreen.hidden = false;
+    loginScreen.removeAttribute('hidden');
+  }
 }
 
 async function showApp() {
-  loginScreen.hidden = true;
-  adminApp.hidden = false;
-  scheduleData = await loadSchedule();
+  if (loginScreen) {
+    loginScreen.hidden = true;
+    loginScreen.setAttribute('hidden', '');
+  }
+  if (adminApp) {
+    adminApp.hidden = false;
+    adminApp.removeAttribute('hidden');
+  }
+  try {
+    scheduleData = await loadSchedule();
+  } catch (e) {
+    console.warn('loadSchedule', e);
+    scheduleData = createEmptySchedule();
+  }
   ensureCatalog(scheduleData);
+  section = parseHashSection();
+  setText(pageTitle, SECTION_TITLES[section] || 'Главная');
+  document.querySelectorAll('[data-section]').forEach((btn) => {
+    btn.classList.toggle('is-active', btn.getAttribute('data-section') === section);
+  });
   renderSection();
 }
 
