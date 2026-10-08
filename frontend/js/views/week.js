@@ -9,7 +9,7 @@ import {
 import { findNowNext } from '../utils/time.js';
 import { renderWeekLesson } from './lesson.js';
 import { loadFlags } from '../storage/store.js';
-import { applySubstitutions } from '../models/substitutions.js';
+import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.js';
 import { getMelmkWeekType } from '../models/bells.js';
 
 /**
@@ -35,7 +35,7 @@ export function renderWeekView(root, data, groupName) {
   const nowIds = new Set();
   if (today >= 1 && today <= 6) {
     let todayLessons = filterByWeek(g.days[String(today)] || [], parity);
-    todayLessons = applySubstitutions(todayLessons, data, groupName, today);
+    todayLessons = applySubstitutions(todayLessons, data, groupName, today, dateForIsoWeekday(today));
     const { current } = findNowNext(todayLessons);
     if (current) nowIds.add(current.id);
   }
@@ -75,7 +75,7 @@ export function renderWeekView(root, data, groupName) {
     for (let d = 1; d <= 6; d++) {
       const cell = el('div', 'week-grid__cell');
       let dayLessons = filterByWeek(g.days[String(d)] || [], parity);
-      dayLessons = applySubstitutions(dayLessons, data, groupName, d);
+      dayLessons = applySubstitutions(dayLessons, data, groupName, d, dateForIsoWeekday(d));
       const lessons = dayLessons.filter((l) => l.pair === pair);
       for (const lesson of lessons) {
         cell.appendChild(renderWeekLesson(lesson, {

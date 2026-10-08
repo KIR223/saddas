@@ -10,7 +10,7 @@ import {
   filterByWeek, getIsoWeekday, DAY_NAMES, TYPE_LABELS,
 } from '../models/schedule.js';
 import { withCurator, getMelmkWeekType, weekTypeLabel } from '../models/bells.js';
-import { applySubstitutions } from '../models/substitutions.js';
+import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.js';
 
 /**
  * @param {HTMLElement} root
@@ -46,7 +46,7 @@ export function renderNowWidget(root, data, groupName) {
 
   const parity = weekType === 'green' ? 'odd' : 'even';
   let lessons = filterByWeek(g.days[String(day)] || [], parity);
-  lessons = applySubstitutions(lessons, data, groupName, day);
+  lessons = applySubstitutions(lessons, data, groupName, day, dateForIsoWeekday(day));
   lessons = withCurator(lessons, day);
   const snap = findNowNext(lessons, now);
 

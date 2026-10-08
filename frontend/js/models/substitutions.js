@@ -3,7 +3,7 @@
  * Источник правды для публичной страницы — серверные day-overrides (кэш ниже).
  */
 
-import { createLesson, genId, cloneData, getPairTimesForDay } from './schedule.js';
+import { createLesson, genId, cloneData, getPairTimesForDay, getIsoWeekday } from './schedule.js';
 
 /**
  * @typedef {Object} Substitution
@@ -20,7 +20,11 @@ import { createLesson, genId, cloneData, getPairTimesForDay } from './schedule.j
  * @property {object} [original]
  */
 
-/** @type {Map<string, import('./schedule.js').Lesson[]>} */
+/**
+ * @typedef {{ lessons: import('./schedule.js').Lesson[], dayKey: number }} ServerDayEntry
+ */
+
+/** @type {Map<string, ServerDayEntry>} */
 const serverDayCache = new Map();
 
 /**
@@ -36,28 +40,50 @@ export function toDateKey(date = new Date()) {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Дата (в текущей неделе) для ISO-дня 1..7
+ * @param {number} isoDay
+ * @param {Date} [ref]
+ * @returns {Date}
+ */
+export function dateForIsoWeekday(isoDay, ref = new Date()) {
+  const cur = getIsoWeekday(ref);
+  const d = new Date(ref);
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() + (Number(isoDay) - cur));
+  return d;
+}
+
 /** @param {string} group @param {string} dateKey */
 function serverKey(group, dateKey) {
   return `${group}|${dateKey}`;
 }
 
 /**
- * Кэш дня с API (уже с учётом замен)
+ * Кэш дня с API (уже с учётом замен). dayKey — ISO 1..6, чтобы не подставить чужой день.
  * @param {string} group
  * @param {string} dateKey
  * @param {import('./schedule.js').Lesson[]} lessons
+ * @param {number} dayKey
  */
-export function setServerDay(group, dateKey, lessons) {
-  serverDayCache.set(serverKey(group, dateKey), lessons);
+export function setServerDay(group, dateKey, lessons, dayKey) {
+  serverDayCache.set(serverKey(group, dateKey), {
+    lessons,
+    dayKey: Number(dayKey) || getIsoWeekday(new Date(`${dateKey}T12:00:00`)),
+  });
 }
 
 /**
  * @param {string} group
  * @param {string} dateKey
+ * @param {string|number} [forDay] — если задан, вернуть только при совпадении дня недели
  * @returns {import('./schedule.js').Lesson[]|null}
  */
-export function getServerDay(group, dateKey) {
-  return serverDayCache.get(serverKey(group, dateKey)) || null;
+export function getServerDay(group, dateKey, forDay = null) {
+  const entry = serverDayCache.get(serverKey(group, dateKey));
+  if (!entry) return null;
+  if (forDay != null && Number(forDay) !== Number(entry.dayKey)) return null;
+  return entry.lessons;
 }
 
 /** Сброс кэша дней (после полного refresh) */
@@ -86,16 +112,19 @@ export function isSubActive(sub, date = new Date()) {
  * @param {string|number} day
  * @param {Date} [date]
  */
-export function applySubstitutions(lessons, data, group, day, date = new Date()) {
-  const dateKey = toDateKey(date);
-  const fromServer = getServerDay(group, dateKey);
+export function applySubstitutions(lessons, data, group, day, date = null) {
+  const dayNum = Number(day);
+  const when = date || (dayNum >= 1 && dayNum <= 7 ? dateForIsoWeekday(dayNum) : new Date());
+  const dateKey = toDateKey(when);
+  // Только если кэш относится к этому дню недели (иначе Чт/Пт/Сб схлопывались в «сегодня»)
+  const fromServer = getServerDay(group, dateKey, dayNum);
   if (fromServer) {
     return fromServer.map((l) => ({ ...l }));
   }
 
   const dayKey = String(day);
   const subs = (data.substitutions || []).filter(
-    (s) => s.group === group && String(s.day) === dayKey && isSubActive(s, date)
+    (s) => s.group === group && String(s.day) === dayKey && isSubActive(s, when)
   );
   if (!subs.length) return lessons.map((l) => ({ ...l }));
 

@@ -12,6 +12,16 @@ import { toDateKey, setServerDay } from '../models/substitutions.js';
 import { createLesson, getPairTimesForDay, getIsoWeekday } from '../models/schedule.js';
 
 /**
+ * Есть ли реальные отличия от базового недельного расписания
+ * @param {object} dayOut
+ * @param {import('../models/schedule.js').Lesson[]} merged
+ */
+function shouldCacheDayOverride(dayOut, merged) {
+  if (dayOut?.custom) return true;
+  return (merged || []).some((l) => l.replaced || l.cancelled);
+}
+
+/**
  * Список дат YYYY-MM-DD от from до to включительно (макс. 120 дней)
  * @param {string} [from]
  * @param {string} [to]
@@ -197,6 +207,9 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
 export async function fetchAndMergeDay(group, dateKey, baseLessons, dayKey) {
   const dayOut = await fetchScheduleDay(group, dateKey);
   const lessons = mergeDayScheduleOut(dayOut, baseLessons, dayKey);
-  setServerDay(group, dateKey, lessons);
+  // Без custom/замен не перекрываем недельное расписание с /api/schedule
+  if (shouldCacheDayOverride(dayOut, lessons)) {
+    setServerDay(group, dateKey, lessons, dayKey);
+  }
   return { dayOut, lessons };
 }
