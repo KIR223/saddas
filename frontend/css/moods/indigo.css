@@ -1,0 +1,127 @@
+/* МелМК — настроение «Индиго»: мягкий фиолетово-синий, дрейфующие blob */
+
+[data-mood="indigo"] {
+  --bg: #f0edf8;
+  --bg-elev: #faf8ff;
+  --bg-muted: #e4dff2;
+  --text: #1a1528;
+  --text-muted: #5f5875;
+  --border: #d5cce8;
+  --accent: #5a4de6;
+  --accent-hover: #4839d4;
+  --accent-soft: #e6e2fc;
+  --now: #5a4de6;
+  --next: #3d8fd4;
+  --focus: #5a4de6;
+  --shadow-sm: 0 2px 8px rgb(90 77 230 / 8%), 0 1px 2px rgb(26 21 40 / 5%);
+  --shadow-md: 0 12px 28px rgb(90 77 230 / 14%), 0 4px 10px rgb(26 21 40 / 6%);
+  --overlay: rgb(26 21 40 / 45%);
+  --mood-spot-1: #7c6cf0;
+  --mood-spot-2: #5eb8e8;
+  --mood-spot-3: #c48ad8;
+}
+
+[data-mood="indigo"][data-theme="dark"] {
+  --bg: #0c0f1e;
+  --bg-elev: #141829;
+  --bg-muted: #1c2238;
+  --text: #ececff;
+  --text-muted: #9499b8;
+  --border: #2a3150;
+  --accent: #8b82ff;
+  --accent-hover: #a49cff;
+  --accent-soft: #252045;
+  --now: #8b82ff;
+  --next: #5ec4e8;
+  --focus: #8b82ff;
+  --shadow-sm: 0 2px 10px rgb(0 0 0 / 32%);
+  --shadow-md: 0 16px 36px rgb(0 0 0 / 42%);
+  --overlay: rgb(4 8 18 / 58%);
+  --mood-spot-1: #6d5ef0;
+  --mood-spot-2: #3a9fd4;
+  --mood-spot-3: #a86cc8;
+}
+
+/* Дрейф blob — медленное скольжение и лёгкое вращение */
+[data-mood="indigo"] .mm-bg__shape {
+  animation: mm-indigo-drift 38s ease-in-out infinite;
+  filter: blur(3px);
+}
+
+[data-mood="indigo"] .mm-bg__shape--1 {
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--mood-spot-1) 50%, transparent), transparent 72%);
+  animation-duration: 42s;
+}
+
+[data-mood="indigo"] .mm-bg__shape--2 {
+  background: radial-gradient(circle at 55% 40%, color-mix(in srgb, var(--mood-spot-2) 45%, transparent), transparent 70%);
+  animation-duration: 48s;
+  animation-delay: -12s;
+}
+
+[data-mood="indigo"] .mm-bg__shape--3 {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--mood-spot-3) 38%, transparent), transparent 68%);
+  animation-duration: 52s;
+  animation-delay: -22s;
+}
+
+[data-mood="indigo"] .mm-bg__shape--4 {
+  animation-duration: 36s;
+  animation-delay: -6s;
+}
+
+[data-mood="indigo"] .mm-bg__shape--5 {
+  animation-duration: 44s;
+  animation-delay: -18s;
+}
+
+[data-mood="indigo"] .mm-bg__extra {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.16;
+  filter: blur(4px);
+  pointer-events: none;
+  animation: mm-indigo-drift 55s ease-in-out infinite;
+}
+
+[data-mood="indigo"] .mm-bg__extra--1 {
+  width: min(30vw, 200px);
+  height: min(30vw, 200px);
+  bottom: 12%;
+  right: 6%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mood-spot-1) 40%, transparent), transparent 70%);
+  animation-delay: -30s;
+}
+
+[data-mood="indigo"] .mm-bg__extra--2 {
+  width: min(24vw, 160px);
+  height: min(24vw, 160px);
+  top: 55%;
+  left: 62%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--mood-spot-2) 35%, transparent), transparent 70%);
+  animation-duration: 60s;
+}
+
+@keyframes mm-indigo-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); opacity: 0.22; }
+  25% { transform: translate3d(28px, -18px, 0) rotate(6deg) scale(1.05); opacity: 0.26; }
+  50% { transform: translate3d(-20px, 24px, 0) rotate(-4deg) scale(0.96); opacity: 0.2; }
+  75% { transform: translate3d(14px, 10px, 0) rotate(3deg) scale(1.02); opacity: 0.24; }
+}
+
+[data-mood="indigo"][data-theme="dark"] .mm-bg__shape,
+[data-mood="indigo"][data-theme="dark"] .mm-bg__extra {
+  opacity: 0.14;
+}
+
+[data-mood="indigo"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__shape,
+[data-mood="indigo"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__extra {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mood="indigo"] .mm-bg__shape,
+  [data-mood="indigo"] .mm-bg__extra {
+    animation: none !important;
+  }
+}

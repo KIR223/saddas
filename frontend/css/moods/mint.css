@@ -1,0 +1,99 @@
+/* МелМК — «Мята»: свежая зелень, пузыри вверх */
+
+[data-mood="mint"] {
+  --bg: #eef6f2;
+  --bg-elev: #f8fcfa;
+  --bg-muted: #dcebe4;
+  --text: #142820;
+  --text-muted: #567068;
+  --border: #c5ddd2;
+  --accent: #3d8b6e;
+  --accent-hover: #2f735a;
+  --accent-soft: #dcefe6;
+  --now: #3d8b6e;
+  --next: #52a080;
+  --focus: #3d8b6e;
+  --shadow-sm: 0 2px 8px rgb(61 139 110 / 10%), 0 1px 2px rgb(20 40 32 / 5%);
+  --shadow-md: 0 12px 28px rgb(61 139 110 / 14%), 0 4px 10px rgb(20 40 32 / 6%);
+  --overlay: rgb(20 40 32 / 44%);
+  --mood-spot-1: #88d4b8;
+  --mood-spot-2: #6cc0a0;
+  --mood-spot-3: #a8e8c8;
+}
+
+[data-mood="mint"][data-theme="dark"] {
+  --bg: #0a1210;
+  --bg-elev: #121c18;
+  --bg-muted: #1a2822;
+  --text: #e8f5ef;
+  --text-muted: #90b0a0;
+  --border: #2a4038;
+  --accent: #6dcfb0;
+  --accent-hover: #88dcc0;
+  --accent-soft: #1a3028;
+  --now: #6dcfb0;
+  --next: #80d8b8;
+  --focus: #6dcfb0;
+  --shadow-sm: 0 2px 10px rgb(0 0 0 / 34%);
+  --shadow-md: 0 16px 36px rgb(0 0 0 / 44%);
+  --overlay: rgb(6 12 10 / 58%);
+  --mood-spot-1: #48a880;
+  --mood-spot-2: #388868;
+  --mood-spot-3: #58c098;
+}
+
+[data-mood="mint"] .mm-bg__shape {
+  border-radius: 50%;
+  filter: blur(3px);
+  animation: mm-mint-bubble 24s ease-in infinite;
+  opacity: 0.2;
+}
+
+[data-mood="mint"] .mm-bg__shape--1 { width: min(20vw, 120px); height: min(20vw, 120px); left: 12%; animation-duration: 26s; }
+[data-mood="mint"] .mm-bg__shape--2 { width: min(16vw, 96px); height: min(16vw, 96px); left: 55%; animation-duration: 22s; animation-delay: -8s; }
+[data-mood="mint"] .mm-bg__shape--3 { width: min(14vw, 84px); height: min(14vw, 84px); left: 78%; animation-duration: 28s; animation-delay: -14s; }
+[data-mood="mint"] .mm-bg__shape--4 { width: min(18vw, 108px); height: min(18vw, 108px); left: 32%; animation-duration: 30s; animation-delay: -4s; }
+[data-mood="mint"] .mm-bg__shape--5 { width: min(12vw, 72px); height: min(12vw, 72px); left: 68%; animation-duration: 20s; animation-delay: -18s; }
+
+[data-mood="mint"] .mm-bg__shape--1,
+[data-mood="mint"] .mm-bg__shape--3,
+[data-mood="mint"] .mm-bg__shape--5 {
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--mood-spot-1) 50%, transparent), transparent 72%);
+}
+
+[data-mood="mint"] .mm-bg__shape--2,
+[data-mood="mint"] .mm-bg__shape--4 {
+  background: radial-gradient(circle at 40% 40%, color-mix(in srgb, var(--mood-spot-2) 45%, transparent), transparent 70%);
+}
+
+[data-mood="mint"] .mm-bg__extra {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  pointer-events: none;
+  animation: mm-mint-bubble 32s ease-in infinite;
+  background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--mood-spot-3) 42%, transparent), transparent 75%);
+}
+
+[data-mood="mint"] .mm-bg__extra--1 { width: 64px; height: 64px; left: 22%; animation-delay: -10s; }
+[data-mood="mint"] .mm-bg__extra--2 { width: 48px; height: 48px; left: 48%; animation-delay: -20s; animation-duration: 26s; }
+[data-mood="mint"] .mm-bg__extra--3 { width: 56px; height: 56px; left: 85%; animation-delay: -6s; animation-duration: 34s; }
+
+@keyframes mm-mint-bubble {
+  0% { transform: translate3d(0, 110vh, 0) scale(0.85); opacity: 0; }
+  12% { opacity: 0.22; }
+  88% { opacity: 0.18; }
+  100% { transform: translate3d(0, -20vh, 0) scale(1.05); opacity: 0; }
+}
+
+[data-mood="mint"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__shape,
+[data-mood="mint"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__extra {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mood="mint"] .mm-bg__shape,
+  [data-mood="mint"] .mm-bg__extra {
+    animation: none !important;
+  }
+}

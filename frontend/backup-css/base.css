@@ -1,0 +1,216 @@
+/* Базовые стили, a11y, reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--accent-soft), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, color-mix(in srgb, var(--next) 18%, transparent), transparent 50%),
+    var(--bg);
+  overflow-x: hidden;
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+/* Кнопки ≥44px */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), transform 100ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn--ghost {
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.btn--ghost:hover {
+  background: color-mix(in srgb, var(--bg-muted) 80%, var(--accent));
+}
+
+.btn--outline {
+  border: 1.5px solid var(--border);
+  background: var(--bg-elev);
+}
+
+.btn--icon {
+  width: var(--touch);
+  padding: 0;
+}
+
+.btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+input, select, textarea {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  font-size: 16px; /* без зума на iOS */
+  width: 100%;
+}
+
+textarea {
+  padding: var(--space-3);
+  min-height: 100px;
+  resize: vertical;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.field {
+  margin-bottom: var(--space-4);
+}
+
+/* Toast */
+.toast-root {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(92vw, 380px);
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 200ms ease, transform 200ms ease;
+  font-size: 0.9375rem;
+}
+
+.toast--show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--success { border-left: 4px solid var(--success); }
+.toast--error { border-left: 4px solid var(--danger); }
+.toast--warn { border-left: 4px solid var(--warn); }
+.toast--info { border-left: 4px solid var(--accent); }
+
+@media print {
+  .app-header,
+  .bottom-nav,
+  .no-print,
+  .toast-root,
+  .install-banner,
+  .update-banner {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  .main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

@@ -1,0 +1,81 @@
+/* Дизайн-токены и темы */
+:root {
+  --font-display: "Manrope", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --touch: 44px;
+  --header-h: 56px;
+  --nav-h: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 6%);
+  --shadow-md: 0 4px 16px rgb(0 0 0 / 8%);
+  --transition: 180ms ease;
+
+  /* Светлая тема — морской / учебный акцент, не фиолетовый */
+  --bg: #f0f4f7;
+  --bg-elev: #ffffff;
+  --bg-muted: #e4ebf0;
+  --text: #14212b;
+  --text-muted: #5a6b78;
+  --border: #cfd8e0;
+  --accent: #0d7a6f;
+  --accent-hover: #0a635a;
+  --accent-soft: #d4f0ec;
+  --danger: #c0392b;
+  --warn: #b7791f;
+  --success: #1e7a45;
+  --now: #0d7a6f;
+  --next: #2c6e9e;
+  --changed: #fff3cd;
+  --type-lecture: #2c6e9e;
+  --type-practice: #0d7a6f;
+  --type-lab: #8a5a00;
+  --type-exam: #c0392b;
+  --type-consult: #6b5b95;
+  --type-other: #5a6b78;
+  --overlay: rgb(20 33 43 / 45%);
+  --focus: #0d7a6f;
+}
+
+[data-theme="dark"] {
+  --bg: #0f161c;
+  --bg-elev: #1a242e;
+  --bg-muted: #243140;
+  --text: #e8eef3;
+  --text-muted: #9aabb8;
+  --border: #314455;
+  --accent: #3dbeaf;
+  --accent-hover: #5dd0c2;
+  --accent-soft: #163a36;
+  --danger: #e8746a;
+  --warn: #e0a84a;
+  --success: #5dcf8a;
+  --now: #3dbeaf;
+  --next: #6eb0e0;
+  --changed: #3d3420;
+  --type-lecture: #6eb0e0;
+  --type-practice: #3dbeaf;
+  --type-lab: #e0a84a;
+  --type-exam: #e8746a;
+  --type-consult: #b8a8e0;
+  --type-other: #9aabb8;
+  --overlay: rgb(0 0 0 / 55%);
+  --focus: #3dbeaf;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-md: 0 4px 16px rgb(0 0 0 / 40%);
+}

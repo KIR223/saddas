@@ -1,0 +1,136 @@
+/* МелМК — недельная сетка */
+.week-scroll {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elev);
+  max-height: calc(100dvh - 240px);
+  box-shadow: var(--shadow-md);
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: 76px repeat(6, minmax(148px, 1fr));
+  min-width: 740px;
+  border-collapse: collapse;
+}
+
+.week-grid__corner,
+.week-grid__dayhead,
+.week-grid__time,
+.week-grid__cell {
+  border-right: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  padding: var(--space-2);
+  vertical-align: top;
+}
+
+.week-grid__corner,
+.week-grid__dayhead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: linear-gradient(180deg, var(--accent-soft), var(--bg-muted));
+  font-weight: 800;
+  font-size: 0.8125rem;
+  text-align: center;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.02em;
+}
+
+.week-grid__corner {
+  left: 0;
+  z-index: 4;
+}
+
+.week-grid__time {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg-elev);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.week-grid__cell {
+  min-height: 92px;
+  background: var(--bg-elev);
+  transition: background 160ms ease;
+}
+
+.week-grid__cell:nth-child(14n + 9),
+.week-grid__cell:nth-child(14n + 10),
+.week-grid__cell:nth-child(14n + 11),
+.week-grid__cell:nth-child(14n + 12),
+.week-grid__cell:nth-child(14n + 13),
+.week-grid__cell:nth-child(14n + 14),
+.week-grid__time:nth-child(14n + 8) {
+  background: color-mix(in srgb, var(--bg-muted) 45%, var(--bg-elev));
+}
+
+.week-grid__cell:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-elev));
+}
+
+.week-lesson {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-muted));
+  border-left: 3px solid var(--accent);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  box-shadow: var(--shadow-sm);
+  transition: transform 140ms ease, box-shadow var(--transition);
+}
+
+.week-lesson:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.week-lesson.is-now {
+  outline: 2px solid var(--now);
+  outline-offset: 1px;
+  box-shadow: var(--shadow-glow);
+}
+
+.week-lesson.is-changed {
+  background: var(--changed);
+  border-left-color: var(--accent-3);
+}
+
+.week-lesson__subj {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.week-lesson__meta {
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+@media (max-width: 767px) {
+  .week-scroll {
+    max-height: none;
+    border-radius: var(--radius-md);
+  }
+  .week-grid {
+    grid-template-columns: 64px repeat(6, minmax(130px, 1fr));
+    min-width: 680px;
+  }
+}

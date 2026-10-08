@@ -1,0 +1,10 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-dev}
+      DATABASE_PATH: /app/data/schedule.db
+    volumes:
+      - ./data:/app/data

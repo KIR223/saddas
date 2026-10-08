@@ -1,0 +1,255 @@
+/* МелМК — UI-анимации (stagger, модалки, toast, тема) */
+
+/* --- Stagger entrance --- */
+.mm-stagger > .lesson-card,
+.mm-stagger > .week-lesson,
+.mm-stagger > [data-mm-stagger] {
+  animation: mm-anim-stagger-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mm-stagger > .lesson-card:nth-child(1),
+.mm-stagger > .week-lesson:nth-child(1),
+.mm-stagger > [data-mm-stagger]:nth-child(1) { animation-delay: 0ms; }
+.mm-stagger > .lesson-card:nth-child(2),
+.mm-stagger > .week-lesson:nth-child(2),
+.mm-stagger > [data-mm-stagger]:nth-child(2) { animation-delay: 45ms; }
+.mm-stagger > .lesson-card:nth-child(3),
+.mm-stagger > .week-lesson:nth-child(3),
+.mm-stagger > [data-mm-stagger]:nth-child(3) { animation-delay: 90ms; }
+.mm-stagger > .lesson-card:nth-child(4),
+.mm-stagger > .week-lesson:nth-child(4),
+.mm-stagger > [data-mm-stagger]:nth-child(4) { animation-delay: 135ms; }
+.mm-stagger > .lesson-card:nth-child(5),
+.mm-stagger > .week-lesson:nth-child(5),
+.mm-stagger > [data-mm-stagger]:nth-child(5) { animation-delay: 180ms; }
+.mm-stagger > .lesson-card:nth-child(6),
+.mm-stagger > .week-lesson:nth-child(6),
+.mm-stagger > [data-mm-stagger]:nth-child(6) { animation-delay: 225ms; }
+.mm-stagger > .lesson-card:nth-child(7),
+.mm-stagger > .week-lesson:nth-child(7),
+.mm-stagger > [data-mm-stagger]:nth-child(7) { animation-delay: 270ms; }
+.mm-stagger > .lesson-card:nth-child(8),
+.mm-stagger > .week-lesson:nth-child(8),
+.mm-stagger > [data-mm-stagger]:nth-child(8) { animation-delay: 315ms; }
+
+@keyframes mm-anim-stagger-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    will-change: transform, opacity;
+  }
+  99% {
+    will-change: transform, opacity;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    will-change: auto;
+  }
+}
+
+/* --- Nav pill spring --- */
+.mm-nav-pill.mm-anim-spring,
+.bottom-nav.mm-anim-spring .mm-nav-pill {
+  transition: transform 320ms cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+.mm-nav-pill.is-moving {
+  animation: mm-anim-nav-spring 380ms cubic-bezier(0.34, 1.45, 0.64, 1) both;
+}
+
+@keyframes mm-anim-nav-spring {
+  0% { transform: scale(0.92); will-change: transform; }
+  60% { transform: scale(1.04); will-change: transform; }
+  100% { transform: scale(1); will-change: auto; }
+}
+
+/* --- Modal: scale + fade --- */
+.modal-backdrop.mm-anim-modal,
+.modal-backdrop:not(.mm-anim-off) {
+  animation: mm-anim-backdrop-in 240ms ease both;
+}
+
+.modal.mm-anim-modal,
+.modal-backdrop:not(.mm-anim-off) .modal {
+  animation: mm-anim-modal-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes mm-anim-backdrop-in {
+  0% { opacity: 0; will-change: opacity; }
+  100% { opacity: 1; will-change: auto; }
+}
+
+@keyframes mm-anim-modal-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.96);
+    will-change: transform, opacity;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    will-change: auto;
+  }
+}
+
+@media (min-width: 640px) {
+  @keyframes mm-anim-modal-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.94);
+      will-change: transform, opacity;
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      will-change: auto;
+    }
+  }
+}
+
+/* --- Bottom sheet (мобильная модалка) --- */
+.mm-bottom-sheet {
+  animation: mm-anim-sheet-up 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes mm-anim-sheet-up {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+    will-change: transform, opacity;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    will-change: auto;
+  }
+}
+
+/* --- Progress ring (до конца пары) --- */
+.mm-progress-ring {
+  --mm-ring-p: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) calc(var(--mm-ring-p) * 1turn),
+    var(--bg-muted) 0
+  );
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mm-progress-ring::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: inherit;
+  background: var(--bg-elev);
+}
+
+.mm-progress-ring.mm-anim-ring {
+  animation: mm-anim-ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mm-anim-ring-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); will-change: transform; }
+  50% { opacity: 0.92; transform: scale(1.03); will-change: transform; }
+  100% { will-change: auto; }
+}
+
+/* --- Toast slide --- */
+.toast.mm-anim-toast-in {
+  animation: mm-anim-toast-in 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.toast.mm-anim-toast-out {
+  animation: mm-anim-toast-out 260ms ease forwards;
+}
+
+@keyframes mm-anim-toast-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.96);
+    will-change: transform, opacity;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    will-change: auto;
+  }
+}
+
+@keyframes mm-anim-toast-out {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+    will-change: auto;
+  }
+}
+
+.toast--show {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* --- Theme transitions --- */
+html.mm-theme-transition,
+html.mm-theme-transition * {
+  transition:
+    background-color 420ms ease,
+    color 420ms ease,
+    border-color 420ms ease,
+    box-shadow 420ms ease,
+    fill 420ms ease,
+    stroke 420ms ease !important;
+}
+
+html.mm-theme-transition .mm-bg__shape,
+html.mm-theme-transition .mm-bg__extra {
+  transition: opacity 420ms ease, filter 420ms ease !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- Полное отключение при reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .mm-stagger > *,
+  .mm-nav-pill,
+  .mm-nav-pill.is-moving,
+  .modal-backdrop,
+  .modal,
+  .mm-bottom-sheet,
+  .mm-progress-ring.mm-anim-ring,
+  .toast.mm-anim-toast-in,
+  .toast.mm-anim-toast-out,
+  html.mm-theme-transition,
+  html.mm-theme-transition * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

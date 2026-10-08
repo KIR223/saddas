@@ -1,0 +1,214 @@
+/* Каркас: header, main, нижняя навигация */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--header-h);
+  padding: var(--space-2) var(--space-3);
+  background: color-mix(in srgb, var(--bg-elev) 92%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.brand__name {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.brand__sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.main {
+  flex: 1;
+  padding: var(--space-3);
+  padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + var(--space-5));
+}
+
+/* Нижняя навигация — действия одной рукой */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  min-height: calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--bg-elev);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgb(0 0 0 / 6%);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--nav-h);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.nav-item svg {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-item[aria-current="page"],
+.nav-item.is-active {
+  color: var(--accent);
+}
+
+.nav-item:hover {
+  color: var(--text);
+}
+
+/* Баннеры */
+.update-banner,
+.install-banner,
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+.update-banner {
+  background: var(--changed);
+}
+
+.banner__text {
+  flex: 1;
+  min-width: 140px;
+  font-size: 0.9375rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.toolbar .select-group {
+  flex: 1;
+  min-width: 140px;
+}
+
+.day-switcher {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: var(--space-3);
+  padding-bottom: 2px;
+}
+
+.day-switcher::-webkit-scrollbar {
+  display: none;
+}
+
+.day-chip {
+  flex: 0 0 auto;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev);
+  border: 1.5px solid var(--border);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.day-chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.day-chip.is-today:not(.is-active) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.view-toggle {
+  display: inline-flex;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+
+.view-toggle__btn {
+  min-height: calc(var(--touch) - 6px);
+  padding: 0 var(--space-3);
+  border-radius: calc(var(--radius-md) - 2px);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.view-toggle__btn.is-active {
+  background: var(--bg-elev);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    padding-inline: var(--space-5);
+  }
+  .main {
+    padding: var(--space-5);
+    padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + var(--space-6));
+  }
+  .bottom-nav {
+    max-width: 1200px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+}

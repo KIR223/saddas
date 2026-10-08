@@ -1,0 +1,134 @@
+/* МелМК — «Небо»: холодная голубая палитра, медленные облака */
+
+[data-mood="sky"] {
+  --bg: #eef4f9;
+  --bg-elev: #f8fbfe;
+  --bg-muted: #dfe9f2;
+  --text: #15202b;
+  --text-muted: #5a6b7d;
+  --border: #c9d8e6;
+  --accent: #3a7fb8;
+  --accent-hover: #2d6a9e;
+  --accent-soft: #dceaf5;
+  --now: #3a7fb8;
+  --next: #5a9fd0;
+  --focus: #3a7fb8;
+  --shadow-sm: 0 2px 8px rgb(58 127 184 / 10%), 0 1px 2px rgb(21 32 43 / 5%);
+  --shadow-md: 0 12px 28px rgb(58 127 184 / 14%), 0 4px 10px rgb(21 32 43 / 6%);
+  --overlay: rgb(21 32 43 / 44%);
+  --mood-spot-1: #8ec5e8;
+  --mood-spot-2: #b8d9f0;
+  --mood-spot-3: #6aa8d4;
+}
+
+[data-mood="sky"][data-theme="dark"] {
+  --bg: #0a121c;
+  --bg-elev: #121c28;
+  --bg-muted: #1a2838;
+  --text: #e8f2fa;
+  --text-muted: #8fa3b8;
+  --border: #2a3d52;
+  --accent: #6eb0e0;
+  --accent-hover: #8cc4ea;
+  --accent-soft: #1a3044;
+  --now: #6eb0e0;
+  --next: #88c8e8;
+  --focus: #6eb0e0;
+  --shadow-sm: 0 2px 10px rgb(0 0 0 / 34%);
+  --shadow-md: 0 16px 36px rgb(0 0 0 / 44%);
+  --overlay: rgb(6 12 20 / 60%);
+  --mood-spot-1: #4a88b8;
+  --mood-spot-2: #3a6898;
+  --mood-spot-3: #5aa0c8;
+}
+
+[data-mood="sky"] .mm-bg__shape {
+  border-radius: 48% 52% 58% 42% / 55% 45% 55% 45%;
+  filter: blur(6px);
+  opacity: 0.28;
+  animation: mm-sky-cloud 72s linear infinite;
+}
+
+[data-mood="sky"] .mm-bg__shape--1 {
+  width: min(62vw, 420px);
+  height: min(22vw, 140px);
+  top: 8%;
+  left: -20%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--mood-spot-1) 55%, transparent), transparent);
+  animation-duration: 85s;
+}
+
+[data-mood="sky"] .mm-bg__shape--2 {
+  width: min(55vw, 360px);
+  height: min(18vw, 120px);
+  top: 22%;
+  right: -25%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--mood-spot-2) 50%, transparent), transparent);
+  animation-duration: 95s;
+  animation-delay: -20s;
+}
+
+[data-mood="sky"] .mm-bg__shape--3 {
+  width: min(48vw, 300px);
+  height: min(16vw, 100px);
+  top: 38%;
+  left: -15%;
+  animation-duration: 78s;
+  animation-delay: -40s;
+}
+
+[data-mood="sky"] .mm-bg__shape--4,
+[data-mood="sky"] .mm-bg__shape--5 {
+  height: min(14vw, 90px);
+  width: min(40vw, 260px);
+  opacity: 0.2;
+}
+
+[data-mood="sky"] .mm-bg__extra {
+  position: absolute;
+  border-radius: 50% 50% 45% 55% / 60% 40% 60% 40%;
+  filter: blur(8px);
+  opacity: 0.18;
+  animation: mm-sky-cloud 100s linear infinite;
+  pointer-events: none;
+}
+
+[data-mood="sky"] .mm-bg__extra--1 {
+  width: min(36vw, 240px);
+  height: min(12vw, 80px);
+  top: 52%;
+  right: -18%;
+  background: color-mix(in srgb, var(--mood-spot-3) 40%, transparent);
+}
+
+[data-mood="sky"] .mm-bg__extra--2 {
+  width: min(44vw, 280px);
+  height: min(10vw, 70px);
+  top: 68%;
+  left: -22%;
+  animation-duration: 110s;
+  animation-delay: -55s;
+}
+
+@keyframes mm-sky-cloud {
+  0% { transform: translate3d(0, 0, 0); opacity: 0.22; }
+  50% { transform: translate3d(12vw, 0, 0); opacity: 0.3; }
+  100% { transform: translate3d(24vw, 0, 0); opacity: 0.22; }
+}
+
+[data-mood="sky"][data-theme="dark"] .mm-bg__shape,
+[data-mood="sky"][data-theme="dark"] .mm-bg__extra {
+  opacity: 0.12;
+}
+
+[data-mood="sky"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__shape,
+[data-mood="sky"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__extra {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mood="sky"] .mm-bg__shape,
+  [data-mood="sky"] .mm-bg__extra {
+    animation: none !important;
+  }
+}

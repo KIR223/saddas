@@ -1,0 +1,117 @@
+/* Палитры оформления: data-theme + data-mode. Префикс --mk-theme-* (бейдж недели не затрагивается). */
+
+:root,
+[data-theme="teal"] {
+  --mk-theme-accent: #0d9488;
+  --mk-theme-accent-2: #0891b2;
+  --mk-theme-on-accent: #ffffff;
+  --mk-theme-surface: #f0fdfa;
+  --mk-theme-border: #99f6e4;
+}
+
+[data-theme="violet"] {
+  --mk-theme-accent: #7c3aed;
+  --mk-theme-accent-2: #4f46e5;
+  --mk-theme-on-accent: #ffffff;
+  --mk-theme-surface: #f5f3ff;
+  --mk-theme-border: #ddd6fe;
+}
+
+[data-theme="blue"] {
+  --mk-theme-accent: #2563eb;
+  --mk-theme-accent-2: #0ea5e9;
+  --mk-theme-on-accent: #ffffff;
+  --mk-theme-surface: #eff6ff;
+  --mk-theme-border: #bfdbfe;
+}
+
+[data-theme="emerald"] {
+  --mk-theme-accent: #059669;
+  --mk-theme-accent-2: #10b981;
+  --mk-theme-on-accent: #ffffff;
+  --mk-theme-surface: #ecfdf5;
+  --mk-theme-border: #a7f3d0;
+}
+
+[data-theme="rose"] {
+  --mk-theme-accent: #e11d48;
+  --mk-theme-accent-2: #db2777;
+  --mk-theme-on-accent: #ffffff;
+  --mk-theme-surface: #fff1f2;
+  --mk-theme-border: #fecdd3;
+}
+
+[data-theme="graphite"] {
+  --mk-theme-accent: #475569;
+  --mk-theme-accent-2: #64748b;
+  --mk-theme-on-accent: #ffffff;
+  --mk-theme-surface: #f8fafc;
+  --mk-theme-border: #cbd5e1;
+}
+
+/* Привязка к существующим токенам UI */
+html {
+  --accent: var(--mk-theme-accent);
+  --accent-hover: color-mix(in srgb, var(--mk-theme-accent) 85%, #000);
+  --accent-soft: color-mix(in srgb, var(--mk-theme-accent) 14%, var(--bg));
+  --accent-2: var(--mk-theme-accent-2);
+  --focus: var(--mk-theme-accent);
+  --now: var(--mk-theme-accent);
+  --next: var(--mk-theme-accent-2);
+  --hero-grad: linear-gradient(135deg, var(--mk-theme-accent) 0%, var(--mk-theme-accent-2) 100%);
+  --theme-color: var(--mk-theme-accent);
+}
+
+[data-mode="dark"][data-theme="teal"] {
+  --mk-theme-accent: #2dd4bf;
+  --mk-theme-accent-2: #22d3ee;
+  --mk-theme-surface: #042f2e;
+  --mk-theme-border: #115e59;
+}
+
+[data-mode="dark"][data-theme="violet"] {
+  --mk-theme-accent: #a78bfa;
+  --mk-theme-accent-2: #818cf8;
+  --mk-theme-surface: #1e1b4b;
+  --mk-theme-border: #4c1d95;
+}
+
+[data-mode="dark"][data-theme="blue"] {
+  --mk-theme-accent: #60a5fa;
+  --mk-theme-accent-2: #38bdf8;
+  --mk-theme-surface: #0c1929;
+  --mk-theme-border: #1e3a5f;
+}
+
+[data-mode="dark"][data-theme="emerald"] {
+  --mk-theme-accent: #34d399;
+  --mk-theme-accent-2: #6ee7b7;
+  --mk-theme-surface: #052e1c;
+  --mk-theme-border: #065f46;
+}
+
+[data-mode="dark"][data-theme="rose"] {
+  --mk-theme-accent: #fb7185;
+  --mk-theme-accent-2: #f472b6;
+  --mk-theme-surface: #3f0a16;
+  --mk-theme-border: #9f1239;
+}
+
+[data-mode="dark"][data-theme="graphite"] {
+  --mk-theme-accent: #94a3b8;
+  --mk-theme-accent-2: #cbd5e1;
+  --mk-theme-surface: #0f172a;
+  --mk-theme-border: #334155;
+}
+
+html.mk-theme-ready,
+html.mk-theme-ready * {
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.mk-theme-ready,
+  html.mk-theme-ready * {
+    transition: none !important;
+  }
+}

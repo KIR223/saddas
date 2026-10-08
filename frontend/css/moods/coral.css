@@ -1,0 +1,110 @@
+/* МелМК — «Коралл»: тёплый персик, дыхание свечения + рассвет в шапке */
+
+[data-mood="coral"] {
+  --bg: #faf3ef;
+  --bg-elev: #fffbfa;
+  --bg-muted: #f0e4dc;
+  --text: #2a1f1a;
+  --text-muted: #7a6558;
+  --border: #e6d4c8;
+  --accent: #c4785a;
+  --accent-hover: #a86248;
+  --accent-soft: #f5e8e0;
+  --now: #c4785a;
+  --next: #d4926a;
+  --focus: #c4785a;
+  --shadow-sm: 0 2px 8px rgb(196 120 90 / 10%), 0 1px 2px rgb(42 31 26 / 5%);
+  --shadow-md: 0 12px 28px rgb(196 120 90 / 15%), 0 4px 10px rgb(42 31 26 / 6%);
+  --overlay: rgb(42 31 26 / 46%);
+  --mood-spot-1: #e8a888;
+  --mood-spot-2: #f0c4a8;
+  --mood-spot-3: #d89070;
+}
+
+[data-mood="coral"][data-theme="dark"] {
+  --bg: #1a1412;
+  --bg-elev: #241c18;
+  --bg-muted: #302620;
+  --text: #f5ebe4;
+  --text-muted: #b8a090;
+  --border: #443830;
+  --accent: #e09a7a;
+  --accent-hover: #eab098;
+  --accent-soft: #3a2820;
+  --now: #e09a7a;
+  --next: #e8b088;
+  --focus: #e09a7a;
+  --shadow-sm: 0 2px 10px rgb(0 0 0 / 34%);
+  --shadow-md: 0 16px 36px rgb(0 0 0 / 44%);
+  --overlay: rgb(12 8 6 / 58%);
+  --mood-spot-1: #c87858;
+  --mood-spot-2: #a86048;
+  --mood-spot-3: #d88868;
+}
+
+[data-mood="coral"] .mm-bg__shape {
+  filter: blur(5px);
+  animation: mm-coral-breathe 14s ease-in-out infinite;
+}
+
+[data-mood="coral"] .mm-bg__shape--1 {
+  background: radial-gradient(circle at 40% 30%, color-mix(in srgb, var(--mood-spot-1) 55%, transparent), transparent 75%);
+}
+
+[data-mood="coral"] .mm-bg__shape--2 {
+  background: radial-gradient(circle at 60% 50%, color-mix(in srgb, var(--mood-spot-2) 48%, transparent), transparent 72%);
+  animation-delay: -4s;
+}
+
+[data-mood="coral"] .mm-bg__shape--3 {
+  background: radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--mood-spot-3) 42%, transparent), transparent 70%);
+  animation-delay: -8s;
+}
+
+[data-mood="coral"] .mm-bg__extra {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  filter: blur(12px);
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, color-mix(in srgb, var(--mood-spot-2) 50%, transparent), transparent 70%);
+  animation: mm-coral-breathe 16s ease-in-out infinite;
+}
+
+[data-mood="coral"] .app-header {
+  position: relative;
+}
+
+[data-mood="coral"] .app-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mood-spot-1) 35%, transparent), transparent 85%);
+  animation: mm-coral-dawn 20s ease-in-out infinite;
+}
+
+@keyframes mm-coral-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.2; filter: blur(5px); }
+  50% { transform: scale(1.08); opacity: 0.32; filter: blur(7px); }
+}
+
+@keyframes mm-coral-dawn {
+  0%, 100% { opacity: 0.28; transform: translateY(0); }
+  50% { opacity: 0.42; transform: translateY(2px); }
+}
+
+[data-mood="coral"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__shape,
+[data-mood="coral"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .mm-bg__extra,
+[data-mood="coral"]:is([data-mood-bg="off"], [data-page-visible="0"], [data-weak-device="1"]) .app-header::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mood="coral"] .mm-bg__shape,
+  [data-mood="coral"] .mm-bg__extra,
+  [data-mood="coral"] .app-header::after {
+    animation: none !important;
+  }
+}

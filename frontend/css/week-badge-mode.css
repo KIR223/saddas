@@ -1,0 +1,12 @@
+/* Совместимость бейджа недели с data-mode (замороженный блок в melmk-ui.css не меняем).
+   Старые селекторы [data-theme="dark"] .week-badge остаются как есть. */
+
+[data-mode="dark"] .week-badge--green {
+  background: #1a3a28;
+  color: #6dcf8a;
+}
+
+[data-mode="dark"] .week-badge--red {
+  background: #3a2020;
+  color: #e8746a;
+}

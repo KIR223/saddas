@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: melmk-backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-dev}
+      DATABASE_PATH: /app/data/schedule.db
+    volumes:
+      - ./backend/data:/app/data
+    restart: unless-stopped
+    networks:
+      - melmk
+
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: melmk-frontend
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - melmk
+
+networks:
+  melmk:
