@@ -1044,8 +1044,10 @@ async function handleExcelFile(file) {
       toast('Загрузка на сервер…', 'info', 2500);
       const { data, upload } = await uploadAndSync(file, token);
       scheduleData = data;
-      pushAudit('excel_api', `${upload.groups} групп`);
-      toast(`Сервер: ${upload.groups} групп, ${upload.lessons} пар`, 'success', 4500);
+      const roomsN = upload.rooms != null ? `, ${upload.rooms} каб.` : '';
+      const teachN = upload.teachers != null ? `, ${upload.teachers} преп.` : '';
+      pushAudit('excel_api', `${upload.groups} групп / ${upload.lessons} пар`);
+      toast(`Сервер: ${upload.groups} групп, ${upload.lessons} пар${roomsN}${teachN}`, 'success', 4500);
       renderSection();
       return;
     }

@@ -1,16 +1,44 @@
 /**
- * Синхронизация с бэкендом: группы + расписание
+ * Синхронизация с бэкендом (контракт docs/openapi.json)
  */
 
-import { fetchInfo, fetchGroups, fetchSchedule, uploadScheduleFile } from './client.js';
-import { buildFromApi, mergeApiSchedule } from './adapt.js';
+import {
+  fetchInfo,
+  fetchGroups,
+  fetchSchedule,
+  fetchRooms,
+  fetchTeachers,
+  fetchBells,
+  fetchScheduleDay,
+  uploadScheduleFile,
+  saveRegularBells,
+  saveShortBells,
+  removeShortBells,
+  saveDayOverride,
+  removeDayOverride,
+  savePairOverride,
+  removePairOverride,
+} from './client.js';
+import { buildFromApi, mergeApiSchedule, mergeCatalogFromApi, applyApiBells } from './adapt.js';
 import { saveSchedule, loadSchedule, hasSchedule, snapshot } from '../storage/store.js';
-import { createEmptySchedule, listGroups } from '../models/schedule.js';
+import { createEmptySchedule, listGroups, ensureCatalog } from '../models/schedule.js';
 
-export { uploadScheduleFile };
+export {
+  uploadScheduleFile,
+  fetchScheduleDay,
+  saveRegularBells,
+  saveShortBells,
+  removeShortBells,
+  saveDayOverride,
+  removeDayOverride,
+  savePairOverride,
+  removePairOverride,
+  fetchBells,
+  fetchRooms,
+  fetchTeachers,
+};
 
 /**
- * Параллельная загрузка с лимитом
  * @template T, R
  * @param {T[]} items
  * @param {number} limit
@@ -29,6 +57,30 @@ async function poolMap(items, limit, fn) {
   const n = Math.min(limit, items.length || 1);
   await Promise.all(Array.from({ length: n }, () => worker()));
   return out;
+}
+
+/**
+ * Справочники + звонки с API (не блокируют основной sync при ошибке)
+ * @param {import('../models/schedule.js').ScheduleData} data
+ */
+async function enrichFromApiCatalog(data) {
+  ensureCatalog(data);
+  try {
+    const [roomsRes, teachersRes] = await Promise.all([
+      fetchRooms().catch(() => null),
+      fetchTeachers().catch(() => null),
+    ]);
+    mergeCatalogFromApi(data, roomsRes, teachersRes);
+  } catch (e) {
+    console.warn('catalog sync', e);
+  }
+  try {
+    const bells = await fetchBells();
+    applyApiBells(bells);
+  } catch (e) {
+    console.warn('bells sync', e);
+  }
+  return data;
 }
 
 /**
@@ -56,13 +108,14 @@ export async function syncFullFromApi(week = 'current', onProgress) {
 
   const data = buildFromApi(names, schedules.filter(Boolean), info);
   data.settings.apiWeek = week === 'current' ? (info.week || 'current') : week;
+  await enrichFromApiCatalog(data);
   const prev = await loadSchedule().catch(() => null);
   const res = await saveSchedule(data, { detectChanges: !!(prev && hasSchedule(prev)) });
   return { data, info, changedIds: res.changedIds || [] };
 }
 
 /**
- * Быстрый старт: info + groups + одна группа
+ * Быстрый старт: info + groups (+ опционально одна группа)
  * @param {string} [preferredGroup]
  * @param {'current'|'green'|'red'} [week]
  */
@@ -71,7 +124,7 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
   const names = groupsRes.groups || [];
   const group = (preferredGroup && names.includes(preferredGroup))
     ? preferredGroup
-    : (names[0] || '');
+    : '';
 
   const data = buildFromApi(names, [], info);
   data.settings.apiWeek = week === 'current' ? (info.week || week) : week;
@@ -82,12 +135,12 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
     mergeApiSchedule(data, sch, info);
   }
 
+  await enrichFromApiCatalog(data);
   await saveSchedule(data, { detectChanges: false, keepPrev: true });
   return { data, info, group, groups: names };
 }
 
 /**
- * Подгрузить / обновить одну группу
  * @param {import('../models/schedule.js').ScheduleData} data
  * @param {string} group
  * @param {'current'|'green'|'red'} [week]
@@ -101,7 +154,6 @@ export async function syncGroup(data, group, week = 'current') {
 }
 
 /**
- * Догрузить остальные группы в фоне
  * @param {import('../models/schedule.js').ScheduleData} data
  * @param {'current'|'green'|'red'} [week]
  * @param {(data: import('../models/schedule.js').ScheduleData) => void} [onUpdate]
@@ -125,6 +177,15 @@ export async function syncRemainingGroups(data, week = 'current', onUpdate) {
   });
   await saveSchedule(data, { detectChanges: false, keepPrev: false });
   return data;
+}
+
+/**
+ * Расписание на конкретную дату (с учётом overrides на сервере)
+ * @param {string} group
+ * @param {string} date YYYY-MM-DD
+ */
+export async function syncScheduleDay(group, date) {
+  return fetchScheduleDay(group, date);
 }
 
 /**

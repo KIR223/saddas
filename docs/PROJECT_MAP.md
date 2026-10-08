@@ -18,8 +18,9 @@
 |------|------------|
 | `frontend/index.html` | Точка входа PWA |
 | `frontend/js/app.js` | Store, роутинг вкладок, рендер |
-| `frontend/js/api/client.js` | HTTP к API |
+| `frontend/js/api/client.js` | HTTP к API (контракт `docs/openapi.json`) |
 | `frontend/js/api/config.js` | `API_ORIGIN` (не менять URL без явной задачи) |
+| `docs/openapi.json` | OpenAPI 3.1 удалённого API |
 | `frontend/js/models/bells.js` | Звонки + **FROZEN** `getMelmkWeekType` |
 | `frontend/js/models/schedule.js` | Нормализация / каталоги |
 | `frontend/js/utils/theme.js` | Палитра `mk_theme` + режим `mk_mode` (`data-theme` / `data-mode`) |
