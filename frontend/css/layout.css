@@ -252,10 +252,12 @@
   transform: none;
 }
 
+/* Сегодня — только точка (::after в melmk-ui), рамка только у .is-active */
 .day-chip.is-today:not(.is-active) {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  box-shadow: none;
 }
 
 .view-toggle {

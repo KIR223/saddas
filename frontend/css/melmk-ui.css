@@ -376,6 +376,13 @@
   border-color: var(--accent);
   box-shadow: none;
 }
+/* Сегодня без выбора — без рамки, только точка ниже */
+.day-chip.is-today:not(.is-active) {
+  border-color: transparent;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  box-shadow: none;
+}
 .day-chip.is-today:not(.is-active)::after,
 .day-chip.is-today.is-active::after {
   content: '';
