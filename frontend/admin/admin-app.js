@@ -533,10 +533,51 @@ function renderWizardStepBody() {
       fillOptions(filter.value);
       scheduleDraftSave();
     });
+    const replaceField = el('div', 'field');
+    replaceField.appendChild(el('label', '', 'Заменить на (новый предмет)'));
+    const replaceHint = el('p', 'adm-muted', '');
+    const replaceInput = document.createElement('input');
+    replaceInput.type = 'text';
+    replaceInput.placeholder = 'Введите новый предмет вместо выбранного';
+    replaceInput.autocomplete = 'off';
+    replaceInput.setAttribute('list', 'adm-subjects-list-step1');
+    replaceInput.value = subWizard.cancelled ? '' : (subWizard.subject || '');
+    const dlSub = document.createElement('datalist');
+    dlSub.id = 'adm-subjects-list-step1';
+    listSubjects(scheduleData).forEach((name) => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      dlSub.appendChild(opt);
+    });
+    replaceInput.addEventListener('input', () => {
+      subWizard.subject = replaceInput.value;
+      scheduleDraftSave();
+    });
+    replaceField.append(replaceHint, replaceInput, dlSub);
+
+    const syncReplaceHint = () => {
+      const les = lessons.find((x) => x.id === subWizard.lessonId);
+      replaceHint.textContent = les
+        ? `Сейчас: «${les.subject}» — укажите, на что заменить`
+        : 'Сначала выберите пару выше';
+      if (!subWizard.cancelled && !subWizard.subject && les) {
+        // не подставляем старое имя — пользователь вводит новое
+        replaceInput.placeholder = `Вместо «${les.subject}»`;
+      }
+      replaceField.hidden = !!subWizard.cancelled;
+      replaceInput.disabled = !!subWizard.cancelled;
+    };
+
     pSel.addEventListener('change', () => {
       subWizard.lessonId = pSel.value;
       const les = lessons.find((x) => x.id === pSel.value);
-      if (les) subWizard.pair = les.pair;
+      if (les) {
+        subWizard.pair = les.pair;
+        // при смене пары сбрасываем новый предмет, если он совпадал со старым
+        if (subWizard.subject === les.subject) subWizard.subject = '';
+      }
+      replaceInput.value = subWizard.subject || '';
+      syncReplaceHint();
       scheduleDraftSave();
     });
     selField.appendChild(pSel);
@@ -548,12 +589,15 @@ function renderWizardStepBody() {
     cancelCb.checked = !!subWizard.cancelled;
     cancelCb.addEventListener('change', () => {
       subWizard.cancelled = cancelCb.checked;
+      syncReplaceHint();
       scheduleDraftSave();
     });
     const cancelLbl = el('label', '', 'Отменить пару (без замены)');
     cancelLbl.htmlFor = 'wiz-cancel';
     cancelRow.append(cancelCb, cancelLbl);
-    wrap.append(pField, selField, cancelRow);
+
+    syncReplaceHint();
+    wrap.append(pField, selField, replaceField, cancelRow);
     return wrap;
   }
 
@@ -688,10 +732,13 @@ async function onWizardNext() {
     toast('Выберите пару', 'warn');
     return;
   }
+  if (subWizard.step === 1 && !subWizard.cancelled && !String(subWizard.subject || '').trim()) {
+    toast('Введите новый предмет для замены', 'warn');
+    return;
+  }
   if (subWizard.step < WIZARD_STEPS.length - 1) {
     if (subWizard.step === 1) {
       const orig = getOriginalLesson(subWizard.group, subWizard.day, subWizard.lessonId);
-      if (orig && !subWizard.subject) subWizard.subject = orig.subject;
       if (orig && !subWizard.teacher) subWizard.teacher = orig.teacher;
       if (orig && !subWizard.room) subWizard.room = orig.room;
       // При отмене пары пропускаем шаги преподавателя и предмета
