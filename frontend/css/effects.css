@@ -5,7 +5,12 @@
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  border-radius: inherit;
+  isolation: isolate;
   z-index: 0;
+  /* Safari: blur не должен вылезать из-под скругления шапки */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
 }
 
 .mm-blob {
@@ -14,6 +19,7 @@
   filter: blur(28px);
   opacity: 0.55;
   will-change: transform;
+  transform: translateZ(0);
 }
 
 .mm-blob--a {

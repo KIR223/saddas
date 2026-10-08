@@ -1,5 +1,5 @@
 /* Service Worker MelMK v5 — сброс старого кэша */
-const CACHE = 'melmk-shell-v13';
+const CACHE = 'melmk-shell-v14';
 const ASSETS = [
   './',
   './index.html',
