@@ -23,11 +23,12 @@
 }
 
 .mm-blob--a {
-  width: 140px;
-  height: 140px;
-  top: -48px;
-  left: -24px;
-  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  /* не у левого края — blur иначе читается как «торчащий» квадрат */
+  width: 120px;
+  height: 120px;
+  top: -40px;
+  left: 28%;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .mm-blob--b {
