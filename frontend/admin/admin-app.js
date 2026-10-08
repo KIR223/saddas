@@ -9,6 +9,7 @@ import { initTheme, toggleTheme } from '../js/utils/theme.js';
 import { loadSchedule, saveSchedule } from '../js/storage/store.js';
 import {
   loadBellsConfig, saveBellsConfig, resetBellsConfig, validateBellSlots,
+  getMelmkWeekType, weekTypeLabel,
 } from '../js/models/bells.js';
 import {
   addSubstitution, updateSubstitution, removeSubstitution, clearSubstitutions,
@@ -268,26 +269,78 @@ function renderSection() {
   }
 }
 
+function countLessons() {
+  let n = 0;
+  const groups = scheduleData?.groups || {};
+  for (const g of Object.values(groups)) {
+    for (const day of Object.values(g.days || {})) n += (day || []).length;
+  }
+  return n;
+}
+
+function renderEmptyBlock(root, title, text, actionLabel, onAction) {
+  const box = el('div', 'adm-empty');
+  box.appendChild(el('p', 'adm-empty__title', title));
+  box.appendChild(el('p', 'adm-empty__text', text));
+  if (actionLabel && onAction) {
+    const b = el('button', 'btn btn--primary', actionLabel);
+    b.type = 'button';
+    b.addEventListener('click', () => { touchSession(); onAction(); });
+    box.appendChild(b);
+  }
+  root.appendChild(box);
+}
+
 /** —— Главная —— */
 function renderHome(root) {
   const wrap = el('div', 'adm-section');
-  wrap.appendChild(el('h2', 'adm-section__title', 'Быстрые действия'));
+  wrap.appendChild(el('h2', 'adm-section__title', 'Дашборд'));
+
+  const weekType = getMelmkWeekType();
+  const weekRow = el('div', 'adm-week-row');
+  weekRow.appendChild(el('span', 'adm-muted', 'Тип текущей недели:'));
+  const badge = el('span', `week-badge week-badge--${weekType}`, weekTypeLabel(weekType));
+  badge.title = 'Только отображение (заморожено)';
+  weekRow.appendChild(badge);
+  wrap.appendChild(weekRow);
+
+  const groupsN = listGroups(scheduleData).length;
+  const teachersN = listTeachers(scheduleData).length;
+  const lessonsN = countLessons();
 
   const stats = el('div', 'adm-stat-row');
-  const stat = el('div', 'adm-stat');
-  stat.appendChild(el('div', 'adm-stat__value', String(countActiveSubs())));
-  stat.appendChild(el('div', 'adm-stat__label', 'Активных замен'));
-  stats.appendChild(stat);
+  [
+    [String(groupsN), 'Групп'],
+    [String(teachersN), 'Преподавателей'],
+    [String(lessonsN), 'Пар'],
+    [String(countActiveSubs()), 'Активных замен'],
+  ].forEach(([v, label]) => {
+    const stat = el('div', 'adm-stat');
+    stat.appendChild(el('div', 'adm-stat__value', v));
+    stat.appendChild(el('div', 'adm-stat__label', label));
+    stats.appendChild(stat);
+  });
   wrap.appendChild(stats);
 
+  if (!lessonsN) {
+    renderEmptyBlock(
+      wrap,
+      'Расписание пусто',
+      'Загрузите Excel или добавьте первую пару — иначе у студентов нечего смотреть.',
+      'Загрузить Excel',
+      () => pickExcelUpload()
+    );
+  }
+
+  wrap.appendChild(el('h3', 'adm-section__title', 'Быстрые действия'));
   const actions = el('div', 'adm-quick-actions');
   const qa = [
-    ['Редактировать пары', () => setSection('schedule')],
+    ['Добавить / править пары', () => setSection('schedule')],
     ['Новая замена', () => { subWizard = loadSubDraft(); setSection('subs'); }],
     ['Преподаватели', () => setSection('teachers')],
     ['Кабинеты', () => setSection('rooms')],
-    ['Редактор звонков', () => setSection('bells')],
-    ['Загрузить Excel', () => pickExcelUpload()],
+    ['Изменить звонки', () => setSection('bells')],
+    ['Импорт Excel', () => pickExcelUpload()],
   ];
   for (const [label, fn] of qa) {
     const b = el('button', 'btn btn--outline', label);
@@ -297,7 +350,7 @@ function renderHome(root) {
   }
   wrap.appendChild(actions);
 
-  wrap.appendChild(el('p', 'adm-muted', `${APP_NAME}: локальные данные в браузере. Пароль хранится только как хэш (см. config.js).`));
+  wrap.appendChild(el('p', 'adm-muted', `${APP_NAME}: данные в браузере / API. Учётные записи и пароли в БД не менялись.`));
   root.appendChild(wrap);
 }
 
