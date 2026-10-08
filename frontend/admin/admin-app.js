@@ -5,7 +5,7 @@
 import {
   tryLogin, isLoggedIn, logout, touchSession, getAuthLockStatus,
 } from '../js/utils/auth.js';
-import { initTheme, toggleTheme } from '../js/utils/theme.js';
+import { initTheme, toggleTheme, syncModeButton, setMode } from '../js/utils/theme.js';
 import { loadSchedule, saveSchedule } from '../js/storage/store.js';
 import {
   loadBellsConfig, saveBellsConfig, resetBellsConfig, validateBellSlots,
@@ -77,13 +77,19 @@ let subWizard = null;
 let draftSaveTimer = null;
 let bellsSaveTimer = null;
 
-/** Тема админки: те же mk_theme / mk_mode */
+/** Тема админки: те же mk_theme / mk_mode + читаемый контраст */
 function initAdminTheme() {
+  // system на телефоне даёт тёмный текст-токен при белых карточках — стартуем со светлой, если не задано
+  try {
+    if (!localStorage.getItem('mk_mode')) setMode('light');
+  } catch { /* ignore */ }
   initTheme();
+  syncModeButton();
   document.getElementById('mood-stylesheet')?.remove();
   document.getElementById('btn-theme')?.addEventListener('click', () => {
     touchSession();
     toggleTheme();
+    syncModeButton();
   });
 }
 
@@ -138,27 +144,30 @@ function bindActivity() {
   }, 30000);
 }
 
-function showLogin() {
-  logout();
+function setAuthUi(loggedIn) {
+  document.body.classList.toggle('adm-state-app', loggedIn);
+  document.body.classList.toggle('adm-state-login', !loggedIn);
   if (adminApp) {
-    adminApp.hidden = true;
-    adminApp.setAttribute('hidden', '');
+    adminApp.hidden = !loggedIn;
+    if (loggedIn) adminApp.removeAttribute('hidden');
+    else adminApp.setAttribute('hidden', '');
   }
   if (loginScreen) {
-    loginScreen.hidden = false;
-    loginScreen.removeAttribute('hidden');
+    loginScreen.hidden = loggedIn;
+    if (loggedIn) loginScreen.setAttribute('hidden', '');
+    else loginScreen.removeAttribute('hidden');
   }
+  // После входа — к началу страницы, без «листать вниз»
+  window.scrollTo(0, 0);
+}
+
+function showLogin() {
+  logout();
+  setAuthUi(false);
 }
 
 async function showApp() {
-  if (loginScreen) {
-    loginScreen.hidden = true;
-    loginScreen.setAttribute('hidden', '');
-  }
-  if (adminApp) {
-    adminApp.hidden = false;
-    adminApp.removeAttribute('hidden');
-  }
+  setAuthUi(true);
   try {
     scheduleData = await loadSchedule();
   } catch (e) {
