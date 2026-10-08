@@ -90,6 +90,142 @@ class ApiTest(unittest.TestCase):
         self.assertIn("Расписание занятий", info_after["title"])
         self.assertIsNotNone(info_after["uploaded_at"])
 
+        self.assertEqual(self.client.get("/api/rooms").json(), {"rooms": ["307"]})
+        self.assertEqual(self.client.get("/api/teachers").json(), {"teachers": ["Курницкая Т.С."]})
+
+    def auth(self):
+        return {"X-Admin-Token": "secret"}
+
+    def upload_default(self):
+        response = self.client.post(
+            "/api/admin/upload",
+            headers=self.auth(),
+            files={"file": ("schedule.xlsx", build_upload(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        return response.json()
+
+    def test_bells_regular_and_short_day(self):
+        denied = self.client.put("/api/admin/bells", json={"pairs": []})
+        self.assertEqual(denied.status_code, 401)
+
+        regular = [
+            {"pair": 1, "start": "08:30", "end": "10:00"},
+            {"pair": 2, "start": "10:10", "end": "11:40"},
+        ]
+        saved = self.client.put("/api/admin/bells", headers=self.auth(), json={"pairs": regular})
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(saved.json()["kind"], "regular")
+        self.assertEqual(saved.json()["pairs"], regular)
+
+        overlap = self.client.put(
+            "/api/admin/bells",
+            headers=self.auth(),
+            json={"pairs": [
+                {"pair": 1, "start": "08:30", "end": "10:00"},
+                {"pair": 2, "start": "09:50", "end": "11:00"},
+            ]},
+        )
+        self.assertEqual(overlap.status_code, 400)
+
+        short_day = "2026-10-08"
+        short = [{"pair": 1, "start": "08:30", "end": "09:05"}]
+        short_saved = self.client.put(
+            f"/api/admin/bells/{short_day}",
+            headers=self.auth(),
+            json={"pairs": short},
+        )
+        self.assertEqual(short_saved.status_code, 200, short_saved.text)
+        self.assertEqual(short_saved.json()["kind"], "short")
+        self.assertEqual(short_saved.json()["pairs"], short)
+
+        by_date = self.client.get("/api/bells", params={"date": short_day})
+        self.assertEqual(by_date.json()["kind"], "short")
+        other = self.client.get("/api/bells", params={"date": "2026-10-09"})
+        self.assertEqual(other.json()["kind"], "regular")
+        self.assertEqual(other.json()["pairs"], regular)
+
+        removed = self.client.delete(f"/api/admin/bells/{short_day}", headers=self.auth())
+        self.assertEqual(removed.status_code, 204)
+        after = self.client.get("/api/bells", params={"date": short_day})
+        self.assertEqual(after.json()["kind"], "regular")
+        self.assertEqual(after.json()["pairs"], regular)
+
+    def test_pair_change_stays_on_one_date(self):
+        self.upload_default()
+        changed = "2026-10-05"
+        same_weekday = "2026-10-19"
+
+        denied = self.client.put(
+            f"/api/admin/schedule/{changed}/pairs/1",
+            params={"group": "ТМ-261"},
+            json={"subject": "Химия", "teacher": "Петров П.П.", "room": "101"},
+        )
+        self.assertEqual(denied.status_code, 401)
+
+        updated = self.client.put(
+            f"/api/admin/schedule/{changed}/pairs/1",
+            headers=self.auth(),
+            params={"group": "ТМ-261"},
+            json={"subject": "Химия", "teacher": "Петров П.П.", "room": "101"},
+        )
+        self.assertEqual(updated.status_code, 200, updated.text)
+        body = updated.json()
+        self.assertTrue(body["custom"])
+        self.assertEqual(body["day"], "Понедельник")
+        self.assertEqual(body["week"], "green")
+        self.assertEqual(body["pairs"][0]["subject"], "Химия")
+
+        later = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": same_weekday})
+        self.assertEqual(later.status_code, 200, later.text)
+        self.assertFalse(later.json()["custom"])
+        self.assertEqual(later.json()["pairs"][0]["subject"], "Физика")
+
+        template = self.client.get("/api/schedule", params={"group": "ТМ-261", "week": "green"})
+        self.assertEqual(template.json()["days"][0]["pairs"][0]["subject"], "Физика")
+
+        self.upload_default()
+        still = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": changed})
+        self.assertEqual(still.json()["pairs"][0]["subject"], "Химия")
+
+        cleared = self.client.delete(
+            f"/api/admin/schedule/{changed}/pairs/1",
+            headers=self.auth(),
+            params={"group": "ТМ-261"},
+        )
+        self.assertEqual(cleared.status_code, 204)
+        restored = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": changed})
+        self.assertFalse(restored.json()["custom"])
+        self.assertEqual(restored.json()["pairs"][0]["subject"], "Физика")
+
+    def test_replace_whole_day(self):
+        self.upload_default()
+        on = "2026-10-05"
+        replaced = self.client.put(
+            f"/api/admin/schedule/{on}",
+            headers=self.auth(),
+            params={"group": "ТМ-261"},
+            json={"pairs": [{"pair": 2, "subject": "История", "teacher": "Бурич П.А.", "room": "119"}]},
+        )
+        self.assertEqual(replaced.status_code, 200, replaced.text)
+        pairs = replaced.json()["pairs"]
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual(pairs[0]["pair"], 2)
+        self.assertEqual(pairs[0]["subject"], "История")
+
+        other = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": "2026-10-19"})
+        self.assertEqual(other.json()["pairs"][0]["subject"], "Физика")
+
+        removed = self.client.delete(
+            f"/api/admin/schedule/{on}",
+            headers=self.auth(),
+            params={"group": "ТМ-261"},
+        )
+        self.assertEqual(removed.status_code, 204)
+        back = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": on})
+        self.assertEqual(back.json()["pairs"][0]["subject"], "Физика")
+        self.assertFalse(back.json()["custom"])
+
 
 if __name__ == "__main__":
     unittest.main()
