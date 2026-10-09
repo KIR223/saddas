@@ -203,18 +203,12 @@ function friendlyWeekendHint(day) {
   return 'Хороших выходных';
 }
 
-/** Статусные подсказки без «Сегодня закончишь…» */
+/** Короткий статус без дублирующих countdown-строк (таймер уже в «Дальше») */
 function buildFriendlyLine(lessons, snap) {
   if (!lessons.length) return 'Пар сегодня нет';
   if (snap.status === 'done') {
     const last = lessons[lessons.length - 1];
     return last?.end ? `На сегодня всё · закончили в ${last.end}` : 'На сегодня всё';
-  }
-  if (snap.status === 'before' && snap.next && snap.startsIn > 0) {
-    return `Первая пара через ${formatCountdown(snap.startsIn)}`;
-  }
-  if (snap.status === 'break' && snap.next && snap.startsIn > 0) {
-    return `Перемена · следующая через ${formatCountdown(snap.startsIn)}`;
   }
   return '';
 }
