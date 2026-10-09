@@ -1,5 +1,5 @@
-/* Service Worker MelMK v5 — сброс старого кэша */
-const CACHE = 'melmk-shell-v17';
+/* Service Worker MelMK v6 — сброс кэша после UI-правок (темы/таймер) */
+const CACHE = 'melmk-shell-v18';
 const ASSETS = [
   './',
   './index.html',
@@ -79,10 +79,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML и JS — сначала сеть, чтобы телефон не залипал на старом UI
+  // HTML / JS / CSS — сначала сеть, иначе телефон держит старый UI
   const isShell = url.pathname.endsWith('.html')
     || url.pathname.endsWith('/')
     || url.pathname.endsWith('.js')
+    || url.pathname.endsWith('.css')
     || url.pathname.endsWith('sw.js');
 
   if (isShell && url.origin === self.location.origin) {
