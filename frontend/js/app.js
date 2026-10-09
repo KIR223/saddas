@@ -440,11 +440,6 @@ function setupHeader() {
     e.preventDefault();
     openThemeSheet(/** @type {HTMLElement} */ (e.currentTarget));
   });
-  document.getElementById('btn-theme')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    toggleLightDark();
-    syncModeButton();
-  });
   document.getElementById('btn-refresh')?.addEventListener('click', refreshData);
 
   const header = document.querySelector('.app-header');
@@ -455,7 +450,6 @@ function setupHeader() {
     });
     ro.observe(header);
   }
-  syncModeButton();
 }
 
 function setupHotkeys() {

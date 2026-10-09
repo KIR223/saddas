@@ -5,6 +5,7 @@
 import { DAY_NAMES, filterByWeek } from '../models/schedule.js';
 import { getMelmkWeekType } from '../models/bells.js';
 import { toast } from '../utils/toast.js';
+import { moscowNow } from '../utils/time.js';
 
 /**
  * @param {string} filename
@@ -88,7 +89,7 @@ export function exportIcs(data, groupName) {
       'METHOD:PUBLISH',
     ];
 
-    const now = new Date();
+    const now = moscowNow();
     const day = now.getDay();
     const monday = new Date(now);
     monday.setDate(now.getDate() + (day === 0 ? -6 : 1 - day));

@@ -1,6 +1,19 @@
 /**
- * Утилиты времени и «сейчас / дальше»
+ * Утилиты времени и «сейчас / дальше».
+ * Все «сейчас» для расписания — по московскому времени (Europe/Moscow).
  */
+
+export const MOSCOW_TZ = 'Europe/Moscow';
+
+/**
+ * Текущий момент в Europe/Moscow.
+ * getHours/getDay/getDate и т.п. отражают московское время,
+ * независимо от часового пояса устройства.
+ * @returns {Date}
+ */
+export function moscowNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: MOSCOW_TZ }));
+}
 
 /**
  * @param {string} hm
@@ -22,12 +35,12 @@ export function clamp(v, a = 0, b = 1) {
 }
 
 /**
- * Прогресс пары 0..1 и остаток в мс (один источник для кольца и полосы)
+ * Прогресс пары 0..1 и остаток в мс
  * @param {string} startHm
  * @param {string} endHm
  * @param {Date} [now]
  */
-export function lessonProgress(startHm, endHm, now = new Date()) {
+export function lessonProgress(startHm, endHm, now = moscowNow()) {
   const start = toMinutes(startHm);
   const end = toMinutes(endHm);
   const nm = nowMinutes(now);
@@ -69,7 +82,7 @@ function pluralMinutes(n) {
 /**
  * @param {Date} [now]
  */
-export function nowMinutes(now = new Date()) {
+export function nowMinutes(now = moscowNow()) {
   return now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
 }
 
@@ -77,7 +90,7 @@ export function nowMinutes(now = new Date()) {
  * @param {import('../models/schedule.js').Lesson[]} lessons
  * @param {Date} [now]
  */
-export function findNowNext(lessons, now = new Date()) {
+export function findNowNext(lessons, now = moscowNow()) {
   const sorted = [...lessons].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
   const nm = nowMinutes(now);
 
@@ -151,7 +164,7 @@ export function findNowNext(lessons, now = new Date()) {
 /**
  * @param {Date} [date]
  */
-export function startOfWeek(date = new Date()) {
+export function startOfWeek(date = moscowNow()) {
   const d = new Date(date);
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
@@ -171,7 +184,8 @@ export function dateOfDay(isoDay, weekStart = startOfWeek()) {
 }
 
 /**
- * Дата по-русски: «Четверг, 8 октября»
+ * Дата по-русски: «Четверг, 8 октября».
+ * Передавайте дату из moscowNow() — get* уже в московском времени.
  * @param {Date} date
  */
 export function formatRuDate(date) {

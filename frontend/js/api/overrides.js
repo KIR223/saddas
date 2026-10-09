@@ -10,6 +10,7 @@ import {
 import { getAdminToken } from './config.js';
 import { toDateKey, setServerDay } from '../models/substitutions.js';
 import { createLesson, getPairTimesForDay, getIsoWeekday } from '../models/schedule.js';
+import { moscowNow } from '../utils/time.js';
 
 /**
  * Есть ли реальные отличия от базового недельного расписания
@@ -61,7 +62,7 @@ export function expandDatesForSub(sub) {
   }
   const dow = Number(sub.day) || getIsoWeekday();
   const out = [];
-  const cur = new Date();
+  const cur = moscowNow();
   cur.setHours(12, 0, 0, 0);
   // ближайший нужный день недели (включая сегодня)
   while (getIsoWeekday(cur) !== dow) cur.setDate(cur.getDate() + 1);
@@ -77,7 +78,7 @@ export function expandDatesForSub(sub) {
  * @param {number} isoDay 1..7
  * @param {Date} [ref]
  */
-export function dateKeyForIsoWeekday(isoDay, ref = new Date()) {
+export function dateKeyForIsoWeekday(isoDay, ref = moscowNow()) {
   const cur = getIsoWeekday(ref);
   const d = new Date(ref);
   d.setHours(12, 0, 0, 0);

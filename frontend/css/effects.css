@@ -61,22 +61,6 @@
   will-change: transform;
 }
 
-.mm-progress {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--bg-muted);
-  overflow: hidden;
-  margin-top: var(--space-3);
-}
-
-.mm-progress__bar {
-  height: 100%;
-  width: 0%;
-  border-radius: inherit;
-  background: var(--hero-grad);
-  transition: width 400ms linear;
-}
-
 .mm-skeleton {
   border-radius: var(--radius-md);
   background: linear-gradient(
@@ -149,8 +133,7 @@
   .mm-skeleton,
   .mm-ripple,
   .mm-day-enter,
-  .mm-theme-flash,
-  .mm-progress__bar {
+  .mm-theme-flash {
     animation: none !important;
     transition: none !important;
   }

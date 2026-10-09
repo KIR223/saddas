@@ -8,6 +8,7 @@ import {
 } from '../models/schedule.js';
 import { applySubstitutions } from '../models/substitutions.js';
 import { withCurator, getMelmkWeekType } from '../models/bells.js';
+import { moscowNow } from '../utils/time.js';
 
 /**
  * @param {HTMLElement} root
@@ -23,7 +24,7 @@ export function renderMonthView(root, data, groupName, opts = {}) {
     return;
   }
 
-  const now = new Date();
+  const now = moscowNow();
   let year = opts.year ?? now.getFullYear();
   let month = opts.month ?? now.getMonth();
 
@@ -80,7 +81,7 @@ function buildGrid(g, data, groupName, year, month, onPickDay) {
   const first = new Date(year, month, 1);
   const firstIso = getIsoWeekday(first);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const today = new Date();
+  const today = moscowNow();
   for (let i = 1; i < firstIso; i++) {
     grid.appendChild(el('div', 'month-grid__cell is-empty'));
   }

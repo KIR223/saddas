@@ -58,31 +58,6 @@
     list.classList.add('mm-stagger', 'mm-day-enter');
   }
 
-  function enhanceNowProgress() {
-    const widget = document.querySelector('.now-widget');
-    if (!widget) return;
-    const timer = widget.querySelector('.now-widget__timer[data-role="ends"]');
-    let barWrap = widget.querySelector('.mm-progress');
-    if (!timer) {
-      if (barWrap) barWrap.remove();
-      return;
-    }
-    if (!barWrap) {
-      barWrap = document.createElement('div');
-      barWrap.className = 'mm-progress';
-      barWrap.innerHTML = '<div class="mm-progress__bar"></div>';
-      timer.parentElement.appendChild(barWrap);
-    }
-    const bar = barWrap.querySelector('.mm-progress__bar');
-    const sec = Number(timer.dataset.seconds);
-    if (!Number.isFinite(sec) || sec < 0) return;
-    // оценка: типичная пара ~90 мин
-    const total = 90 * 60;
-    const left = Math.min(sec, total);
-    const pct = Math.max(0, Math.min(100, ((total - left) / total) * 100));
-    bar.style.width = `${pct}%`;
-  }
-
   function bindRipples() {
     if (reduced || weak) return;
     document.addEventListener('pointerdown', (e) => {
@@ -100,24 +75,12 @@
     }, { passive: true });
   }
 
-  function bindThemeFlash() {
-    const btn = document.getElementById('btn-theme');
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      syncThemeColor();
-      if (reduced) return;
-      document.body.classList.add('mm-theme-flash');
-      setTimeout(() => document.body.classList.remove('mm-theme-flash'), 450);
-    });
-  }
-
   function observeUi() {
     const main = document.getElementById('main');
     if (!main) return;
     const mo = new MutationObserver(() => {
       moveNavPill();
       staggerLessons();
-      enhanceNowProgress();
     });
     mo.observe(main, { childList: true, subtree: true });
     document.querySelectorAll('.nav-item').forEach((item) => {
@@ -129,14 +92,12 @@
     ensureHeaderDecor();
     ensureNavPill();
     bindRipples();
-    bindThemeFlash();
     observeUi();
     syncThemeColor();
     moveNavPill();
     const obs = new MutationObserver(syncThemeColor);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-mode'] });
     window.addEventListener('resize', moveNavPill);
-    setInterval(enhanceNowProgress, 1000);
   }
 
   if (document.readyState === 'loading') {
