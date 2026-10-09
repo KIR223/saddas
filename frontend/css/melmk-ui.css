@@ -133,19 +133,6 @@
   font-weight: 800;
   color: var(--accent);
 }
-.now-progress {
-  margin-top: 10px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--bg-muted);
-  overflow: hidden;
-}
-.now-progress__fill {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-  transition: width 0.4s ease;
-}
 
 /* Выбор группы */
 .home-picker { margin-bottom: 10px; }
@@ -836,7 +823,6 @@ body.sheet-open {
   animation: mm-fade-scale 0.2s ease;
 }
 #btn-mood,
-#btn-theme,
 #btn-refresh {
   width: 40px;
   height: 40px;

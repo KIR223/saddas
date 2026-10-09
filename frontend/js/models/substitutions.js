@@ -4,6 +4,7 @@
  */
 
 import { createLesson, genId, cloneData, getPairTimesForDay, getIsoWeekday } from './schedule.js';
+import { moscowNow } from '../utils/time.js';
 
 /**
  * @typedef {Object} Substitution
@@ -31,7 +32,7 @@ const serverDayCache = new Map();
  * @param {Date|string} [date]
  * @returns {string} YYYY-MM-DD
  */
-export function toDateKey(date = new Date()) {
+export function toDateKey(date = moscowNow()) {
   if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
   const d = typeof date === 'string' ? new Date(`${date}T12:00:00`) : date;
   const y = d.getFullYear();
@@ -46,7 +47,7 @@ export function toDateKey(date = new Date()) {
  * @param {Date} [ref]
  * @returns {Date}
  */
-export function dateForIsoWeekday(isoDay, ref = new Date()) {
+export function dateForIsoWeekday(isoDay, ref = moscowNow()) {
   const cur = getIsoWeekday(ref);
   const d = new Date(ref);
   d.setHours(12, 0, 0, 0);
@@ -96,7 +97,7 @@ export function clearServerDayCache() {
  * @param {Substitution} sub
  * @param {string|Date} [date]
  */
-export function isSubActive(sub, date = new Date()) {
+export function isSubActive(sub, date = moscowNow()) {
   const key = typeof date === 'string' ? date : toDateKey(date);
   if (sub.dateFrom && key < sub.dateFrom) return false;
   if (sub.dateTo && key > sub.dateTo) return false;
@@ -114,7 +115,7 @@ export function isSubActive(sub, date = new Date()) {
  */
 export function applySubstitutions(lessons, data, group, day, date = null) {
   const dayNum = Number(day);
-  const when = date || (dayNum >= 1 && dayNum <= 7 ? dateForIsoWeekday(dayNum) : new Date());
+  const when = date || (dayNum >= 1 && dayNum <= 7 ? dateForIsoWeekday(dayNum) : moscowNow());
   const dateKey = toDateKey(when);
   // Только если кэш относится к этому дню недели (иначе Чт/Пт/Сб схлопывались в «сегодня»)
   const fromServer = getServerDay(group, dateKey, dayNum);

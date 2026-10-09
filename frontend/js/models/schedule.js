@@ -3,6 +3,8 @@
  * Иерархия: группа → день (1–6) → пара → предмет/преподаватель/кабинет/подгруппа
  */
 
+import { moscowNow } from '../utils/time.js';
+
 /** @typedef {'lecture'|'practice'|'lab'|'exam'|'consult'|'other'} LessonType */
 /** @typedef {'all'|'odd'|'even'} WeekParity */
 
@@ -171,21 +173,23 @@ export function createLesson(partial = {}) {
 }
 
 /**
- * День недели ISO: пн=1 … вс=7 (вс → 0 для отображения, в модели 1–6)
+ * День недели ISO: пн=1 … вс=7 (вс → 0 для отображения, в модели 1–6).
+ * Без аргумента — текущий день по Москве.
  * @param {Date} [date]
  * @returns {number} 1–7
  */
-export function getIsoWeekday(date = new Date()) {
+export function getIsoWeekday(date = moscowNow()) {
   const d = date.getDay();
   return d === 0 ? 7 : d;
 }
 
 /**
- * Номер учебной недели (чётная/нечётная от начала года или даты)
+ * Номер учебной недели (чётная/нечётная от начала года или даты).
+ * Без аргумента — по московскому «сейчас».
  * @param {Date} [date]
  * @returns {'odd'|'even'}
  */
-export function getWeekParity(date = new Date()) {
+export function getWeekParity(date = moscowNow()) {
   const start = new Date(date.getFullYear(), 0, 1);
   const week = Math.ceil((((date - start) / 86400000) + start.getDay() + 1) / 7);
   return week % 2 === 0 ? 'even' : 'odd';

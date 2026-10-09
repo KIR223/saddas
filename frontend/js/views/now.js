@@ -4,7 +4,7 @@
 
 import { el, clear } from '../utils/dom.js';
 import {
-  findNowNext, formatCountdown, lessonProgress, formatRuDate, clamp,
+  findNowNext, formatCountdown, lessonProgress, formatRuDate, clamp, moscowNow,
 } from '../utils/time.js';
 import {
   filterByWeek, getIsoWeekday, DAY_NAMES, TYPE_LABELS,
@@ -22,10 +22,10 @@ export function renderNowWidget(root, data, groupName) {
   const g = data.groups[groupName];
   if (!g) return;
 
-  const day = getIsoWeekday();
-  const weekType = getMelmkWeekType();
+  const now = moscowNow();
+  const day = getIsoWeekday(now);
+  const weekType = getMelmkWeekType(now);
   const greet = el('section', 'home-greet mm-enter');
-  const now = new Date();
   const hello = el('div', 'home-greet__hello', greetingByHour(now));
   const dateLine = el('div', 'home-greet__date', formatRuDate(now));
   const badge = el('span', `week-badge week-badge--${weekType}`, weekTypeLabel(weekType));
@@ -91,7 +91,6 @@ export function renderNowWidget(root, data, groupName) {
       info.appendChild(timer);
       ringWrap.appendChild(info);
       block.appendChild(ringWrap);
-      block.appendChild(buildProgressBar(progress));
       nowBox.appendChild(block);
     });
   } else if (snap.status === 'done') {
@@ -136,18 +135,6 @@ export function renderNowWidget(root, data, groupName) {
 
 function chip(text) {
   return el('span', 'now-chip', text);
-}
-
-function buildProgressBar(pct) {
-  const bar = el('div', 'now-progress');
-  bar.setAttribute('role', 'progressbar');
-  bar.setAttribute('aria-valuenow', String(Math.round(pct * 100)));
-  bar.setAttribute('aria-valuemin', '0');
-  bar.setAttribute('aria-valuemax', '100');
-  const fill = el('div', 'now-progress__fill');
-  fill.style.width = `${clamp(pct) * 100}%`;
-  bar.appendChild(fill);
-  return bar;
 }
 
 function buildProgressRing(pct) {

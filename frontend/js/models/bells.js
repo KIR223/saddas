@@ -3,6 +3,7 @@
  */
 
 import { LS } from '../config.js';
+import { moscowNow } from '../utils/time.js';
 import { DEFAULT_PAIR_TIMES, PAIR_TIMES_MON_THU } from './schedule.js';
 
 /**
@@ -174,11 +175,12 @@ export function validateBellSlots(slots) {
 }
 
 /**
- * Тип недели МелМК: нечётная ISO — зелёная, чётная — красная
+ * Тип недели МелМК: нечётная ISO — зелёная, чётная — красная.
+ * Без аргумента — по московскому «сейчас».
  * @param {Date} [date]
  * @returns {'green'|'red'}
  */
-export function getMelmkWeekType(date = new Date()) {
+export function getMelmkWeekType(date = moscowNow()) {
   const week = getIsoWeekNumber(date);
   return week % 2 === 1 ? 'green' : 'red';
 }
