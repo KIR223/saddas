@@ -15,7 +15,7 @@ export function initPwa(mount) {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const reg = await navigator.serviceWorker.register('./sw.js?v=18');
+        const reg = await navigator.serviceWorker.register('./sw.js?v=19');
         // Принудительно подтянуть новую версию (иначе телефон держит старый UI)
         reg.update().catch(() => {});
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
