@@ -438,6 +438,7 @@ function setupNav() {
 function setupHeader() {
   document.getElementById('btn-mood')?.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     openThemeSheet(/** @type {HTMLElement} */ (e.currentTarget));
   });
   document.getElementById('btn-refresh')?.addEventListener('click', refreshData);
@@ -563,15 +564,26 @@ async function boot() {
   subscribe((data) => { state = data; });
   render();
 
-  setInterval(() => {
+  let lastTickAt = 0;
+  const runPreciseTick = () => {
     if (document.hidden) return;
+    const now = Date.now();
+    // коррекция дрейфа: не чаще ~1 с, но выравниваем по wall-clock
+    if (now - lastTickAt < 900) return;
+    lastTickAt = now;
     const nowRoot = document.getElementById('now-root');
-    if (nowRoot && currentGroup) tickNowTimers(nowRoot);
+    if (nowRoot && currentGroup && tab === 'home') {
+      const expired = tickNowTimers(nowRoot);
+      if (expired && hasSchedule(state) && !showSearchPanel && scheduleMode === 'day') {
+        renderNowWidget(nowRoot, state, currentGroup);
+      }
+    }
     if (tab === 'bells') {
       const mainEl = document.getElementById('main');
       if (mainEl) tickBellsTimers(mainEl);
     }
-  }, 1000);
+  };
+  setInterval(runPreciseTick, 1000);
 
   setInterval(() => {
     if (document.hidden) return;

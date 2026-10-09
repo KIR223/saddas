@@ -1,16 +1,19 @@
 /**
- * Виджет «Сейчас / Дальше» — одна колонка на телефоне, прогресс из одного источника
+ * Виджет «Сейчас / Дальше» — точный таймер, аккуратная вёрстка на узких экранах
  */
 
 import { el, clear } from '../utils/dom.js';
 import {
-  findNowNext, formatCountdown, lessonProgress, formatRuDate, clamp, moscowNow,
+  findNowNext, formatCountdown, lessonProgress, formatRuDate, clamp, moscowNow, hmToDate,
 } from '../utils/time.js';
 import {
   filterByWeek, getIsoWeekday, DAY_NAMES, TYPE_LABELS,
 } from '../models/schedule.js';
 import { withCurator, getMelmkWeekType, weekTypeLabel } from '../models/bells.js';
 import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.js';
+
+const RING_SIZE = 64;
+const RING_STROKE = 5;
 
 /**
  * @param {HTMLElement} root
@@ -54,7 +57,10 @@ export function renderNowWidget(root, data, groupName) {
   wrap.setAttribute('aria-live', 'polite');
   wrap.setAttribute('aria-label', 'Текущая и следующая пара');
 
-  wrap.appendChild(el('p', 'now-widget__friendly', buildFriendlyLine(lessons, snap)));
+  const friendly = buildFriendlyLine(lessons, snap);
+  if (friendly) {
+    wrap.appendChild(el('p', 'now-widget__friendly', friendly));
+  }
 
   const grid = el('div', 'now-next');
 
@@ -68,7 +74,10 @@ export function renderNowWidget(root, data, groupName) {
       const block = el('div', 'now-panel__lesson');
       const ringWrap = el('div', 'now-ring-wrap');
       const { progress, remainingMs } = lessonProgress(current.start, current.end, now);
-      ringWrap.appendChild(buildProgressRing(progress));
+      const ring = buildProgressRing(progress);
+      ring.dataset.startHm = current.start;
+      ring.dataset.endHm = current.end;
+      ringWrap.appendChild(ring);
       const info = el('div', 'now-panel__info');
       const title = el('div', 'now-widget__title', current.subject);
       title.title = current.subject;
@@ -84,10 +93,12 @@ export function renderNowWidget(root, data, groupName) {
         meta.appendChild(chip(TYPE_LABELS[current.type] || current.type));
       }
       info.appendChild(meta);
+      const sec = Math.max(0, Math.ceil(remainingMs / 1000));
       const timer = el('div', 'now-widget__timer');
       timer.dataset.role = 'ends';
-      timer.dataset.seconds = String(Math.round(remainingMs / 1000));
-      timer.innerHTML = `<span class="now-widget__timer-label">осталось</span> <span class="now-widget__timer-val" data-seconds-display>${formatCountdown(Math.round(remainingMs / 1000))}</span>`;
+      timer.dataset.startHm = current.start;
+      timer.dataset.endHm = current.end;
+      timer.innerHTML = `<span class="now-widget__timer-label">осталось</span> <span class="now-widget__timer-val" data-seconds-display>${formatCountdown(sec)}</span>`;
       info.appendChild(timer);
       ringWrap.appendChild(info);
       block.appendChild(ringWrap);
@@ -119,7 +130,7 @@ export function renderNowWidget(root, data, groupName) {
       const timer = el('div', 'now-widget__timer');
       timer.style.color = 'var(--next)';
       timer.dataset.role = 'starts';
-      timer.dataset.seconds = String(snap.startsIn);
+      timer.dataset.targetHm = snap.next.start;
       timer.innerHTML = `<span class="now-widget__timer-label">через</span> <span class="now-widget__timer-val" data-seconds-display>${formatCountdown(snap.startsIn)}</span>`;
       nextBox.appendChild(timer);
     }
@@ -138,8 +149,8 @@ function chip(text) {
 }
 
 function buildProgressRing(pct) {
-  const size = 72;
-  const stroke = 6;
+  const size = RING_SIZE;
+  const stroke = RING_STROKE;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -148,6 +159,7 @@ function buildProgressRing(pct) {
   svg.setAttribute('height', String(size));
   svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
   svg.setAttribute('aria-hidden', 'true');
+  svg.dataset.circumference = String(c);
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bg.setAttribute('cx', String(size / 2));
   bg.setAttribute('cy', String(size / 2));
@@ -171,6 +183,13 @@ function buildProgressRing(pct) {
   return svg;
 }
 
+function setRingProgress(svg, pct) {
+  const fg = svg.querySelector('.now-ring__fg');
+  if (!fg) return;
+  const c = Number(svg.dataset.circumference) || (2 * Math.PI * ((RING_SIZE - RING_STROKE) / 2));
+  fg.setAttribute('stroke-dashoffset', String(c * (1 - clamp(pct))));
+}
+
 function greetingByHour(date) {
   const h = date.getHours();
   if (h < 6) return 'Доброй ночи';
@@ -184,6 +203,7 @@ function friendlyWeekendHint(day) {
   return 'Хороших выходных';
 }
 
+/** Статусные подсказки без «Сегодня закончишь…» */
 function buildFriendlyLine(lessons, snap) {
   if (!lessons.length) return 'Пар сегодня нет';
   if (snap.status === 'done') {
@@ -191,38 +211,43 @@ function buildFriendlyLine(lessons, snap) {
     return last?.end ? `На сегодня всё · закончили в ${last.end}` : 'На сегодня всё';
   }
   if (snap.status === 'before' && snap.next && snap.startsIn > 0) {
-    const mins = Math.ceil(snap.startsIn / 60);
-    return `Первая пара через ${mins} ${mins === 1 ? 'минуту' : mins < 5 ? 'минуты' : 'мин'}`;
+    return `Первая пара через ${formatCountdown(snap.startsIn)}`;
   }
   if (snap.status === 'break' && snap.next && snap.startsIn > 0) {
-    const mins = Math.max(1, Math.ceil(snap.startsIn / 60));
-    return `Перемена, следующая пара через ${mins} мин`;
-  }
-  if (snap.current || snap.currents?.length) {
-    const last = lessons[lessons.length - 1];
-    return last?.end ? `Сегодня закончишь в ${last.end}` : 'Пара идёт';
+    return `Перемена · следующая через ${formatCountdown(snap.startsIn)}`;
   }
   return '';
 }
 
 /**
+ * Обновить таймеры и кольцо по реальному времени (без дрейфа).
  * @param {HTMLElement} root
+ * @returns {boolean} true — пора перерисовать виджет (пара/перемена закончилась)
  */
 export function tickNowTimers(root) {
-  if (document.hidden) return;
-  root.querySelectorAll('[data-seconds]').forEach((node) => {
-    let sec = Number(node.dataset.seconds) - 1;
-    if (Number.isNaN(sec)) return;
-    node.dataset.seconds = String(sec);
-    const display = node.querySelector('[data-seconds-display]') || node;
-    const role = node.dataset.role;
-    const label = role === 'ends' ? 'осталось' : 'через';
-    if (node.querySelector('[data-seconds-display]')) {
-      const lab = node.querySelector('.now-widget__timer-label');
-      if (lab) lab.textContent = label;
-      display.textContent = formatCountdown(sec);
-    } else {
-      node.textContent = `${label} ${formatCountdown(sec)}`;
-    }
+  if (document.hidden) return false;
+  const now = moscowNow();
+  let expired = false;
+
+  root.querySelectorAll('.now-widget__timer[data-role="ends"][data-end-hm]').forEach((node) => {
+    const startHm = node.dataset.startHm;
+    const endHm = node.dataset.endHm;
+    const { progress, remainingMs } = lessonProgress(startHm, endHm, now);
+    const sec = Math.max(0, Math.ceil(remainingMs / 1000));
+    const display = node.querySelector('[data-seconds-display]');
+    if (display) display.textContent = formatCountdown(sec);
+    const ring = node.closest('.now-ring-wrap')?.querySelector('.now-ring');
+    if (ring) setRingProgress(ring, progress);
+    if (sec <= 0) expired = true;
   });
+
+  root.querySelectorAll('.now-widget__timer[data-role="starts"][data-target-hm]').forEach((node) => {
+    const target = hmToDate(node.dataset.targetHm, now).getTime();
+    const sec = Math.max(0, Math.ceil((target - now.getTime()) / 1000));
+    const display = node.querySelector('[data-seconds-display]');
+    if (display) display.textContent = formatCountdown(sec);
+    if (sec <= 0) expired = true;
+  });
+
+  return expired;
 }

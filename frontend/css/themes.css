@@ -1,4 +1,6 @@
-/* Палитры оформления: data-theme + data-mode. Префикс --mk-theme-* (бейдж недели не затрагивается). */
+/* Палитры: data-theme. Режим светлый/тёмный: data-mode.
+   Важно: привязка --accent идёт через :root / html[data-*],
+   иначе :root из variables.css перекрывает html { } (специфичность). */
 
 :root,
 [data-theme="teal"] {
@@ -49,19 +51,6 @@
   --mk-theme-border: #cbd5e1;
 }
 
-/* Привязка к существующим токенам UI */
-html {
-  --accent: var(--mk-theme-accent);
-  --accent-hover: color-mix(in srgb, var(--mk-theme-accent) 85%, #000);
-  --accent-soft: color-mix(in srgb, var(--mk-theme-accent) 14%, var(--bg));
-  --accent-2: var(--mk-theme-accent-2);
-  --focus: var(--mk-theme-accent);
-  --now: var(--mk-theme-accent);
-  --next: var(--mk-theme-accent-2);
-  --hero-grad: linear-gradient(135deg, var(--mk-theme-accent) 0%, var(--mk-theme-accent-2) 100%);
-  --theme-color: var(--mk-theme-accent);
-}
-
 [data-mode="dark"][data-theme="teal"] {
   --mk-theme-accent: #2dd4bf;
   --mk-theme-accent-2: #22d3ee;
@@ -104,14 +93,43 @@ html {
   --mk-theme-border: #334155;
 }
 
+/* Привязка палитры к UI-токенам — та же специфичность, что у :root / [data-mode] */
+:root,
+html[data-theme],
+html[data-mode] {
+  --accent: var(--mk-theme-accent);
+  --accent-hover: color-mix(in srgb, var(--mk-theme-accent) 85%, #000);
+  --accent-soft: color-mix(in srgb, var(--mk-theme-accent) 14%, var(--bg));
+  --accent-2: var(--mk-theme-accent-2);
+  --focus: var(--mk-theme-accent);
+  --now: var(--mk-theme-accent);
+  --next: var(--mk-theme-accent-2);
+  --hero-grad: linear-gradient(135deg, var(--mk-theme-accent) 0%, var(--mk-theme-accent-2) 100%);
+  --theme-color: var(--mk-theme-accent);
+}
+
 html.mk-theme-ready,
-html.mk-theme-ready * {
+html.mk-theme-ready body,
+html.mk-theme-ready .app,
+html.mk-theme-ready .app-header,
+html.mk-theme-ready .bottom-nav,
+html.mk-theme-ready .now-widget,
+html.mk-theme-ready .lesson-card,
+html.mk-theme-ready .btn,
+html.mk-theme-ready .nav-item {
   transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html.mk-theme-ready,
-  html.mk-theme-ready * {
+  html.mk-theme-ready body,
+  html.mk-theme-ready .app,
+  html.mk-theme-ready .app-header,
+  html.mk-theme-ready .bottom-nav,
+  html.mk-theme-ready .now-widget,
+  html.mk-theme-ready .lesson-card,
+  html.mk-theme-ready .btn,
+  html.mk-theme-ready .nav-item {
     transition: none !important;
   }
 }

@@ -26,6 +26,18 @@ export function toMinutes(hm) {
 }
 
 /**
+ * HH:MM → Date в тот же календарный день, что и base (московские get*).
+ * @param {string} hm
+ * @param {Date} [base]
+ */
+export function hmToDate(hm, base = moscowNow()) {
+  const [h, m] = String(hm || '0:0').split(':').map(Number);
+  const d = new Date(base);
+  d.setHours(h || 0, m || 0, 0, 0);
+  return d;
+}
+
+/**
  * @param {number} v
  * @param {number} [a]
  * @param {number} [b]
@@ -35,48 +47,39 @@ export function clamp(v, a = 0, b = 1) {
 }
 
 /**
- * Прогресс пары 0..1 и остаток в мс
+ * Прогресс пары 0..1 и остаток в мс (с учётом секунд)
  * @param {string} startHm
  * @param {string} endHm
  * @param {Date} [now]
  */
 export function lessonProgress(startHm, endHm, now = moscowNow()) {
-  const start = toMinutes(startHm);
-  const end = toMinutes(endHm);
-  const nm = nowMinutes(now);
-  const span = Math.max(1e-6, end - start);
-  const progress = clamp((nm - start) / span);
-  const remainingMs = Math.max(0, (end - nm) * 60 * 1000);
+  const start = hmToDate(startHm, now).getTime();
+  const end = hmToDate(endHm, now).getTime();
+  const t = now.getTime();
+  const span = Math.max(1, end - start);
+  const progress = clamp((t - start) / span);
+  const remainingMs = Math.max(0, end - t);
   return { progress, remainingMs };
 }
 
 /**
- * Формат оставшегося времени по промту (с единицами)
+ * Точный countdown: «42 сек» / «16 мин 42 сек» / «1 ч 05 мин»
  * @param {number} totalSec
  * @returns {string}
  */
 export function formatCountdown(totalSec) {
-  if (totalSec < 0) totalSec = 0;
-  if (totalSec < 60) {
-    const s = Math.floor(totalSec);
-    return `${s} сек`;
+  let sec = Math.max(0, Math.floor(totalSec));
+  if (sec < 60) return `${sec} сек`;
+  const h = Math.floor(sec / 3600);
+  sec %= 3600;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (h > 0) {
+    return s > 0
+      ? `${h} ч ${String(m).padStart(2, '0')} мин ${String(s).padStart(2, '0')} сек`
+      : `${h} ч ${String(m).padStart(2, '0')} мин`;
   }
-  const totalMin = Math.floor(totalSec / 60);
-  if (totalMin < 60) {
-    return `${totalMin} ${pluralMinutes(totalMin)}`;
-  }
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return m > 0 ? `${h} ч ${String(m).padStart(2, '0')} мин` : `${h} ч`;
-}
-
-function pluralMinutes(n) {
-  const abs = Math.abs(n) % 100;
-  const d = abs % 10;
-  if (abs > 10 && abs < 20) return 'минут';
-  if (d === 1) return 'минута';
-  if (d >= 2 && d <= 4) return 'минуты';
-  return 'минут';
+  return `${m} мин ${String(s).padStart(2, '0')} сек`;
 }
 
 /**
@@ -123,9 +126,9 @@ export function findNowNext(lessons, now = moscowNow()) {
     };
   }
 
-  const firstStart = toMinutes(sorted[0].start);
-  if (nm < firstStart) {
-    const startsIn = Math.round((firstStart - nm) * 60);
+  const firstStartMs = hmToDate(sorted[0].start, now).getTime();
+  if (now.getTime() < firstStartMs) {
+    const startsIn = Math.max(0, Math.round((firstStartMs - now.getTime()) / 1000));
     return {
       current: null,
       currents: [],
@@ -138,7 +141,7 @@ export function findNowNext(lessons, now = moscowNow()) {
   }
 
   if (next) {
-    const startsIn = Math.round((toMinutes(next.start) - nm) * 60);
+    const startsIn = Math.max(0, Math.round((hmToDate(next.start, now).getTime() - now.getTime()) / 1000));
     return {
       current: null,
       currents: [],
@@ -185,7 +188,6 @@ export function dateOfDay(isoDay, weekStart = startOfWeek()) {
 
 /**
  * Дата по-русски: «Четверг, 8 октября».
- * Передавайте дату из moscowNow() — get* уже в московском времени.
  * @param {Date} date
  */
 export function formatRuDate(date) {

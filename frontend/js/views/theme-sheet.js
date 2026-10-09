@@ -52,7 +52,9 @@ export function openThemeSheet(anchorBtn) {
   document.body.classList.add('theme-panel-open');
   openPanel = panel;
 
-  const close = () => {
+  const close = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     closeThemeSheet();
     lastAnchor?.focus?.();
   };
@@ -61,13 +63,15 @@ export function openThemeSheet(anchorBtn) {
   done.addEventListener('click', close);
 
   const onKey = (e) => {
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape') close(e);
   };
   document.addEventListener('keydown', onKey);
   panel._onKey = onKey;
 
   paintBody(body);
-  requestAnimationFrame(() => panel.classList.add('is-open'));
+  requestAnimationFrame(() => {
+    panel.classList.add('is-open');
+  });
   setTimeout(() => closeBtn.focus(), 50);
 }
 

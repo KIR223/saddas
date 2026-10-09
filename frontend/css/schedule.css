@@ -27,17 +27,21 @@
 }
 
 .now-widget__label {
-  font-size: 0.6875rem;
+  font-size: clamp(0.6875rem, 2.8vw, 0.75rem);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+  line-height: 1.3;
 }
 
 .now-widget__title {
-  font-size: clamp(1.1rem, 3.5vw, 1.35rem);
+  font-size: clamp(1.05rem, 4.8vw, 1.375rem);
   margin-top: var(--space-1);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .now-widget__meta {
