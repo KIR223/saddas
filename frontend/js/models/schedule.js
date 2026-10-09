@@ -215,11 +215,11 @@ export function listGroups(data) {
 }
 
 /**
- * Все уникальные преподаватели
+ * Преподаватели из текста пар (сырые строки, без нормализации API)
  * @param {ScheduleData} data
  * @returns {string[]}
  */
-export function listTeachers(data) {
+function teachersFromLessons(data) {
   const set = new Set();
   for (const g of Object.values(data.groups || {})) {
     for (const lessons of Object.values(g.days || {})) {
@@ -229,6 +229,19 @@ export function listTeachers(data) {
     }
   }
   return [...set].sort((a, b) => a.localeCompare(b, 'ru'));
+}
+
+/**
+ * Список преподавателей: каталог GET /api/teachers, иначе из пар
+ * @param {ScheduleData} data
+ * @returns {string[]}
+ */
+export function listTeachers(data) {
+  ensureCatalog(data);
+  if (data.catalog.teachers.length) {
+    return [...data.catalog.teachers].sort((a, b) => a.localeCompare(b, 'ru'));
+  }
+  return teachersFromLessons(data);
 }
 
 /**
@@ -249,13 +262,13 @@ export function listRooms(data) {
 }
 
 /**
- * Преподаватели: каталог + из пар
+ * Преподаватели: каталог (/api/teachers) + сырые имена из пар
  * @param {ScheduleData} data
  */
 export function listTeachersAll(data) {
   ensureCatalog(data);
   const set = new Set(data.catalog.teachers);
-  for (const t of listTeachers(data)) set.add(t);
+  for (const t of teachersFromLessons(data)) set.add(t);
   return [...set].sort((a, b) => a.localeCompare(b, 'ru'));
 }
 
@@ -271,6 +284,18 @@ export function listRoomsAll(data) {
 }
 
 /**
+ * Сравнение ФИО с учётом точек/пробелов (каталог API vs сырой текст пары)
+ * @param {string} haystack
+ * @param {string} needle
+ */
+function teacherTextMatch(haystack, needle) {
+  const norm = (s) => s.toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+  const h = norm(haystack);
+  const n = norm(needle);
+  return !!n && h.includes(n);
+}
+
+/**
  * Пары преподавателя по всем группам
  * @param {ScheduleData} data
  * @param {string} teacher
@@ -278,11 +303,10 @@ export function listRoomsAll(data) {
  */
 export function lessonsByTeacher(data, teacher) {
   const out = [];
-  const t = teacher.toLowerCase();
   for (const [group, g] of Object.entries(data.groups || {})) {
     for (const [day, lessons] of Object.entries(g.days || {})) {
       for (const lesson of lessons) {
-        if (lesson.teacher && lesson.teacher.toLowerCase().includes(t)) {
+        if (lesson.teacher && teacherTextMatch(lesson.teacher, teacher)) {
           out.push({ group, day, lesson });
         }
       }

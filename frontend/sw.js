@@ -1,5 +1,5 @@
 /* Service Worker MelMK v6 — сброс кэша после UI-правок (темы/таймер) */
-const CACHE = 'melmk-shell-v19';
+const CACHE = 'melmk-shell-v20';
 const ASSETS = [
   './',
   './index.html',

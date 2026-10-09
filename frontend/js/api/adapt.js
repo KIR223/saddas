@@ -102,9 +102,11 @@ export function mergeCatalogFromApi(data, roomsRes, teachersRes) {
     const set = new Set([...(data.catalog.rooms || []), ...roomsRes.rooms]);
     data.catalog.rooms = [...set].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru'));
   }
-  if (teachersRes?.teachers?.length) {
-    const set = new Set([...(data.catalog.teachers || []), ...teachersRes.teachers]);
-    data.catalog.teachers = [...set].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru'));
+  // /api/teachers — источник правды (нормализованные ФИО)
+  if (teachersRes && Array.isArray(teachersRes.teachers)) {
+    data.catalog.teachers = teachersRes.teachers
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'ru'));
   }
   return data;
 }
