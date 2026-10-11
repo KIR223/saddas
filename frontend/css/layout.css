@@ -49,12 +49,30 @@
 
 .brand {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
   flex: 1;
   min-width: 0;
   position: relative;
   z-index: 1;
+}
+
+.brand__logo {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-muted, #64748b) 18%, transparent);
+}
+
+.brand__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .brand__name {

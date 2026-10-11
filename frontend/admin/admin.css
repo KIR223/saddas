@@ -65,17 +65,29 @@ body.adm-state-app .adm-shell {
   border: 1px solid var(--adm-border);
 }
 
+.adm-login__logo {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+}
+
 .adm-login__title {
   margin: 0 0 4px;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--adm-text);
+  text-align: center;
 }
 
 .adm-login__sub {
   margin: 0 0 20px;
   color: var(--adm-muted);
   font-size: 0.95rem;
+  text-align: center;
 }
 
 .adm-login__error {
@@ -145,8 +157,25 @@ body.adm-state-app .adm-shell {
 .adm-sidebar__brand {
   padding: 8px 12px 16px;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-sidebar__logo {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+}
+
+.adm-sidebar__brand-text {
+  display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
 }
 
 .adm-sidebar__name {

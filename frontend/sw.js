@@ -1,5 +1,5 @@
 /* Service Worker MelMK v6 — сброс кэша после UI-правок (темы/таймер) */
-const CACHE = 'melmk-shell-v20';
+const CACHE = 'melmk-shell-v21';
 const ASSETS = [
   './',
   './index.html',
@@ -48,6 +48,7 @@ const ASSETS = [
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/logo.png',
 ];
 
 self.addEventListener('install', (event) => {
