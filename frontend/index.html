@@ -30,20 +30,21 @@
   <meta property="og:type" content="website" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="./icons/icon-192.png" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./css/variables.css?v=19" />
-  <link rel="stylesheet" href="./css/themes.css?v=19" />
-  <link rel="stylesheet" href="./css/base.css?v=19" />
-  <link rel="stylesheet" href="./css/layout.css?v=19" />
-  <link rel="stylesheet" href="./css/schedule.css?v=19" />
-  <link rel="stylesheet" href="./css/week.css?v=19" />
-  <link rel="stylesheet" href="./css/effects.css?v=19" />
-  <link rel="stylesheet" href="./css/animations.css?v=19" />
-  <link rel="stylesheet" href="./css/melmk-ui.css?v=19" />
-  <link rel="stylesheet" href="./css/week-badge-mode.css?v=19" />
+  <link rel="stylesheet" href="./css/variables.css?v=20" />
+  <link rel="stylesheet" href="./css/themes.css?v=20" />
+  <link rel="stylesheet" href="./css/base.css?v=20" />
+  <link rel="stylesheet" href="./css/layout.css?v=20" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20" />
+  <link rel="stylesheet" href="./css/week.css?v=20" />
+  <link rel="stylesheet" href="./css/effects.css?v=20" />
+  <link rel="stylesheet" href="./css/animations.css?v=20" />
+  <link rel="stylesheet" href="./css/melmk-ui.css?v=20" />
+  <link rel="stylesheet" href="./css/week-badge-mode.css?v=20" />
   <title>МелМК — Расписание</title>
 </head>
 <body>
@@ -59,8 +60,11 @@
   <div class="app" id="app">
     <header class="app-header" role="banner">
       <div class="brand">
-        <div class="brand__name">МелМК</div>
-        <div class="brand__sub" id="brand-sub">Загрузка…</div>
+        <img class="brand__logo" src="./icons/logo.png" width="40" height="40" alt="" decoding="async" />
+        <div class="brand__text">
+          <div class="brand__name">МелМК</div>
+          <div class="brand__sub" id="brand-sub">Загрузка…</div>
+        </div>
       </div>
       <div class="header-actions no-print">
         <button type="button" class="btn btn--icon btn--ghost" id="btn-refresh" aria-label="Обновить" title="Обновить">

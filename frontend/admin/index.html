@@ -22,17 +22,19 @@
   <meta name="color-scheme" content="light dark" />
   <meta name="description" content="Панель администратора МелМК" />
   <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="../css/variables.css?v=12" />
-  <link rel="stylesheet" href="../css/themes.css?v=12" />
-  <link rel="stylesheet" href="../css/base.css?v=12" />
-  <link rel="stylesheet" href="../css/layout.css?v=12" />
-  <link rel="stylesheet" href="../css/week-badge-mode.css?v=12" />
-  <link rel="stylesheet" href="admin.css?v=12" />
+  <link rel="icon" href="../icons/icon-192.png" type="image/png" sizes="192x192" />
+  <link rel="stylesheet" href="../css/variables.css?v=13" />
+  <link rel="stylesheet" href="../css/themes.css?v=13" />
+  <link rel="stylesheet" href="../css/base.css?v=13" />
+  <link rel="stylesheet" href="../css/layout.css?v=13" />
+  <link rel="stylesheet" href="../css/week-badge-mode.css?v=13" />
+  <link rel="stylesheet" href="admin.css?v=13" />
   <title>МелМК — Админ</title>
 </head>
 <body class="adm-body adm-state-login">
   <div id="login-screen" class="adm-login">
     <div class="adm-login__card">
+      <img class="adm-login__logo" src="../icons/logo.png" width="72" height="72" alt="ГБПОУ МелМК" decoding="async" />
       <h1 class="adm-login__title">МелМК</h1>
       <p class="adm-login__sub">Панель для преподавателей и админов</p>
       <form id="login-form" class="adm-form" autocomplete="on">
@@ -54,8 +56,11 @@
   <div id="admin-app" class="adm-shell" hidden>
     <aside class="adm-sidebar no-print" aria-label="Меню администратора">
       <div class="adm-sidebar__brand">
-        <span class="adm-sidebar__name">МелМК</span>
-        <span class="adm-sidebar__badge">Админ</span>
+        <img class="adm-sidebar__logo" src="../icons/logo.png" width="36" height="36" alt="" decoding="async" />
+        <div class="adm-sidebar__brand-text">
+          <span class="adm-sidebar__name">МелМК</span>
+          <span class="adm-sidebar__badge">Админ</span>
+        </div>
       </div>
       <nav class="adm-sidebar__nav">
         <button type="button" class="adm-nav-btn is-active" data-section="home">Главная</button>
