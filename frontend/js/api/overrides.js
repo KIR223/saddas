@@ -144,7 +144,7 @@ export async function removeSubstitutionFromApi(sub, token = getAdminToken()) {
 }
 
 /**
- * DayScheduleOut → уроки с флагом replaced при custom / отличии от базы
+ * DayScheduleOut → уроки с флагом replaced только при отличии конкретной пары от базы
  * @param {object} dayOut
  * @param {import('../models/schedule.js').Lesson[]} [baseLessons]
  * @param {number} [dayKey]
@@ -152,7 +152,6 @@ export async function removeSubstitutionFromApi(sub, token = getAdminToken()) {
 export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
   const slots = getPairTimesForDay(dayKey);
   const baseByPair = new Map(baseLessons.map((l) => [l.pair, l]));
-  const custom = !!dayOut?.custom;
   const out = [];
 
   for (const p of dayOut?.pairs || []) {
@@ -165,11 +164,11 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
     const room = String(p.room || '').trim();
     const cancelled = p.cancelled === true || /отмен/i.test(subject) || subject === '';
     if (cancelled) continue;
-    const changed = custom
-      || !base
-      || base.subject !== subject
-      || base.teacher !== teacher
-      || base.room !== room;
+    // custom относится ко всему дню, включая отменённые и отсутствующие пары.
+    // Для оставшихся пар сравниваем их собственные данные с шаблоном.
+    const changed = base
+      ? base.subject !== subject || base.teacher !== teacher || base.room !== room
+      : !!dayOut?.custom;
 
     out.push(createLesson({
       ...(base || {}),
