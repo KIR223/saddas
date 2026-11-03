@@ -130,10 +130,10 @@ export function applyApiBells(bells) {
 
   const cfg = loadBellsConfig();
   // kind: regular | short | …
-  if (bells.kind === 'short' || bells.date) {
+  if (bells.kind === 'short') {
     return saveBellsConfig({ ...cfg, shortDay: pairs });
   }
-  return saveBellsConfig({ ...cfg, regular: pairs, monThu: pairs });
+  return saveBellsConfig({ ...cfg, regular: pairs });
 }
 
 /**
@@ -162,3 +162,4 @@ export function lessonsFromDaySchedule(dayOut, dayKey = 1) {
   }
   return lessons;
 }
+

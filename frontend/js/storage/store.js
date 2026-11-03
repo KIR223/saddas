@@ -2,7 +2,7 @@
  * Хранилище: localStorage + IndexedDB (расписание) + toast-ошибки
  */
 
-import { createEmptySchedule, cloneData } from '../models/schedule.js';
+import { createEmptySchedule, cloneData, migrateScheduleBells } from '../models/schedule.js';
 
 const LS_KEY = 'schedule_app_v1';
 const LS_PREV = 'schedule_app_prev_v1';
@@ -134,7 +134,7 @@ async function idbGet() {
 export async function loadSchedule() {
   try {
     const fromIdb = await idbGet();
-    if (fromIdb && fromIdb.groups) return fromIdb;
+    if (fromIdb && fromIdb.groups) return migrateScheduleBells(fromIdb);
   } catch (e) {
     console.warn('IDB load', e);
   }
@@ -142,7 +142,7 @@ export async function loadSchedule() {
     const raw = localStorage.getItem(LS_KEY);
     if (raw) {
       const data = JSON.parse(raw);
-      if (data && data.groups) return data;
+      if (data && data.groups) return migrateScheduleBells(data);
     }
   } catch (e) {
     console.warn('LS load', e);
@@ -256,3 +256,4 @@ export function importRawJson(text) {
 export function snapshot(data) {
   return cloneData(data);
 }
+

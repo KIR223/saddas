@@ -2,6 +2,8 @@
  * Сопоставление колонок Excel → поля модели
  */
 
+import { DEFAULT_PAIR_TIMES, getPairTimesForDay } from '../models/schedule.js';
+
 export const FIELD_KEYS = [
   { key: 'group', label: 'Группа', required: true },
   { key: 'day', label: 'День недели', required: true },
@@ -115,19 +117,12 @@ export function rowsToSchedule(rows, mapping, sourceFile = '') {
     settings: {
       theme: 'system',
       defaultGroup: '',
-      pairTimes: [
-        { pair: 1, start: '08:00', end: '09:00' },
-        { pair: 2, start: '09:05', end: '10:05' },
-        { pair: 3, start: '10:10', end: '11:10' },
-        { pair: 4, start: '11:40', end: '12:40' },
-        { pair: 5, start: '12:45', end: '13:45' },
-      ],
+      pairTimes: DEFAULT_PAIR_TIMES.map((s) => ({ ...s })),
       adminUnlocked: false,
       showWeekends: true,
     },
   };
 
-  const DEFAULT_TIMES = data.settings.pairTimes;
   let idCounter = 0;
 
   for (const row of rows) {
@@ -150,6 +145,7 @@ export function rowsToSchedule(rows, mapping, sourceFile = '') {
     }
     if (!data.groups[group].days[day]) data.groups[group].days[day] = [];
 
+    const DEFAULT_TIMES = getPairTimesForDay(day);
     const slot = DEFAULT_TIMES.find((t) => t.pair === pair) || DEFAULT_TIMES[0];
     const subgroupRaw = get('subgroup');
     const lesson = {
@@ -184,3 +180,4 @@ export function buildTemplateCsv() {
   ];
   return `\uFEFF${header}\n${sample.join('\n')}\n`;
 }
+

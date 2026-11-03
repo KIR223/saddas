@@ -30,18 +30,19 @@ export function renderBellsView(root) {
     root.appendChild(el('p', 'now-widget__meta', 'Сегодня выходной'));
   }
 
-  // Пн / Чт
-  const monThu = el('section', 'bells-block');
-  const monTitle = el('h3', 'bells-block__title', 'Понедельник, четверг');
-  if (viewDay === 1 || viewDay === 4) {
-    monTitle.appendChild(el('span', 'bells-block__today', ' сегодня'));
+  for (const [dayNumber, title, slots] of [
+    [1, 'Понедельник', cfg.monThu],
+    [4, 'Четверг', cfg.thursday],
+  ]) {
+    const section = el('section', 'bells-block');
+    const heading = el('h3', 'bells-block__title', title);
+    if (viewDay === dayNumber) heading.appendChild(el('span', 'bells-block__today', ' сегодня'));
+    section.appendChild(heading);
+    section.appendChild(renderTimeline(slots, getCuratorForDay(dayNumber, cfg), {
+      active: viewDay === dayNumber,
+    }));
+    root.appendChild(section);
   }
-  monThu.appendChild(monTitle);
-  const curator = getCuratorForDay(1, cfg);
-  monThu.appendChild(renderTimeline(cfg.monThu, curator, {
-    active: viewDay === 1 || viewDay === 4,
-  }));
-  root.appendChild(monThu);
 
   // Вт / Ср / Пт
   const regular = el('section', 'bells-block');
@@ -73,7 +74,7 @@ function renderTimeline(slots, curator, opts = {}) {
       start: curator.start,
       end: curator.end,
       special: true,
-      breakAfter: 5,
+      breakAfter: slots.length ? Math.max(0, toMinutes(slots[0].start) - toMinutes(curator.end)) : null,
     }, highlight ? nm : -1));
   }
 
@@ -151,3 +152,4 @@ export function tickBellsTimers(root) {
     node.textContent = `до конца ${formatCountdown(sec)}`;
   });
 }
+

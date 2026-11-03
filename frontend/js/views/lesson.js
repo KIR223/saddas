@@ -112,9 +112,11 @@ export function renderWeekLesson(lesson, opts = {}) {
   if (opts.isNow) box.classList.add('is-now');
   if (opts.isChanged || lesson.replaced) box.classList.add('is-changed');
   box.appendChild(el('div', 'week-lesson__subj', lesson.subject || '—'));
+  box.appendChild(el('div', 'week-lesson__meta', `${lesson.start}–${lesson.end}`));
   const metaParts = [lesson.room, lesson.teacher].filter(Boolean).join(' · ');
   if (metaParts) box.appendChild(el('div', 'week-lesson__meta', metaParts));
   if (lesson.subgroup) box.appendChild(el('div', 'week-lesson__meta', `п/г ${lesson.subgroup}`));
   if (lesson.replaced) box.appendChild(el('div', 'week-lesson__meta', 'Замена'));
   return box;
 }
+

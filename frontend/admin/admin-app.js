@@ -978,7 +978,8 @@ function renderBellsEditor(root) {
   };
 
   sec.appendChild(renderBellCard('Вт, ср, пт', 'regular', cfg.regular, saveLive));
-  sec.appendChild(renderBellCard('Пн, чт', 'monThu', cfg.monThu, saveLive));
+  sec.appendChild(renderBellCard('Понедельник', 'monThu', cfg.monThu, saveLive));
+  sec.appendChild(renderBellCard('Четверг', 'thursday', cfg.thursday, saveLive));
   sec.appendChild(renderBellCard('Сокращённый день', 'shortDay', cfg.shortDay, saveLive));
 
   const cur = el('div', 'adm-card');
@@ -1009,23 +1010,26 @@ function renderBellsEditor(root) {
   daysRow.append(mon, el('label', '', 'Пн'), thu, el('label', '', 'Чт'));
   cur.appendChild(daysRow);
 
-  const tStart = document.createElement('input');
-  tStart.type = 'time';
-  tStart.value = cfg.curator.start;
-  tStart.addEventListener('change', () => saveLive({ curator: { ...loadBellsConfig().curator, start: tStart.value } }));
-  const tEnd = document.createElement('input');
-  tEnd.type = 'time';
-  tEnd.value = cfg.curator.end;
-  tEnd.addEventListener('change', () => saveLive({ curator: { ...loadBellsConfig().curator, end: tEnd.value } }));
-  const timeGrid = el('div', 'adm-grid-2');
-  const f1 = el('div', 'field');
-  f1.appendChild(el('label', '', 'Начало'));
-  f1.appendChild(tStart);
-  const f2 = el('div', 'field');
-  f2.appendChild(el('label', '', 'Конец'));
-  f2.appendChild(tEnd);
-  timeGrid.append(f1, f2);
-  cur.appendChild(timeGrid);
+  for (const [day, label] of [[1, 'Понедельник'], [4, 'Четверг']]) {
+    cur.appendChild(el('h4', '', label));
+    const slot = cfg.curator.byDay[day];
+    const timeGrid = el('div', 'adm-grid-2');
+    for (const [key, title] of [['start', 'Начало'], ['end', 'Конец']]) {
+      const input = document.createElement('input');
+      input.type = 'time';
+      input.value = slot[key];
+      input.addEventListener('change', () => {
+        const current = loadBellsConfig().curator;
+        saveLive({ curator: { ...current, byDay: {
+          ...current.byDay, [day]: { ...current.byDay[day], [key]: input.value },
+        } } });
+      });
+      const field = el('div', 'field');
+      field.append(el('label', '', title), input);
+      timeGrid.appendChild(field);
+    }
+    cur.appendChild(timeGrid);
+  }
 
   sec.appendChild(cur);
   sec.appendChild(errBox);
@@ -1076,6 +1080,7 @@ function validateAndShowErrors(cfg, errBox) {
   for (const [name, slots] of [
     ['regular', cfg.regular],
     ['monThu', cfg.monThu],
+    ['thursday', cfg.thursday],
     ['shortDay', cfg.shortDay],
   ]) {
     const v = validateBellSlots(slots);
@@ -1367,3 +1372,4 @@ if (isLoggedIn()) {
 } else {
   showLogin();
 }
+

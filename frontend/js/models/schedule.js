@@ -42,17 +42,17 @@ import { moscowNow } from '../utils/time.js';
 
 /**
  * Звонки МелМК: вт–ср–пт (основные дни)
- * Пн/чт — см. PAIR_TIMES_MON_THU (+ «Разговор о важном» 08:00–08:40)
+ * Пн — PAIR_TIMES_MON_THU, чт — PAIR_TIMES_THU
  */
 export const DEFAULT_PAIR_TIMES = [
-  { pair: 1, start: '08:00', end: '09:00' },
-  { pair: 2, start: '09:05', end: '10:05' },
-  { pair: 3, start: '10:10', end: '11:10' },
-  { pair: 4, start: '11:40', end: '12:40' },
-  { pair: 5, start: '12:45', end: '13:45' },
+  { pair: 1, start: '08:30', end: '09:30' },
+  { pair: 2, start: '09:35', end: '10:35' },
+  { pair: 3, start: '10:40', end: '11:40' },
+  { pair: 4, start: '12:10', end: '13:10' },
+  { pair: 5, start: '13:15', end: '14:15' },
 ];
 
-/** Звонки пн и чт */
+/** Звонки понедельника (имя экспорта сохранено для совместимости) */
 export const PAIR_TIMES_MON_THU = [
   { pair: 1, start: '08:45', end: '09:45' },
   { pair: 2, start: '09:50', end: '10:50' },
@@ -61,13 +61,59 @@ export const PAIR_TIMES_MON_THU = [
   { pair: 5, start: '13:30', end: '14:30' },
 ];
 
+/** Звонки четверга */
+export const PAIR_TIMES_THU = [
+  { pair: 1, start: '09:15', end: '10:15' },
+  { pair: 2, start: '10:20', end: '11:20' },
+  { pair: 3, start: '11:25', end: '12:25' },
+  { pair: 4, start: '12:55', end: '13:55' },
+  { pair: 5, start: '14:00', end: '15:00' },
+];
+
+/** Прежние стандартные времена: для обновления сохранённых данных. */
+export const LEGACY_PAIR_TIMES = [
+  { pair: 1, start: '08:00', end: '09:00' },
+  { pair: 2, start: '09:05', end: '10:05' },
+  { pair: 3, start: '10:10', end: '11:10' },
+  { pair: 4, start: '11:40', end: '12:40' },
+  { pair: 5, start: '12:45', end: '13:45' },
+];
+
+export function sameBellSlots(a, b) {
+  return a?.length === b.length && a.every((s, i) =>
+    Number(s.pair) === b[i].pair && s.start === b[i].start && s.end === b[i].end);
+}
+
+/** Обновить только старые стандартные времена, сохраняя ручные изменения. */
+export function migrateScheduleBells(data) {
+  for (const group of Object.values(data.groups || {})) {
+    for (const [day, lessons] of Object.entries(group.days || {})) {
+      const legacy = [1, 4].includes(Number(day)) ? PAIR_TIMES_MON_THU : LEGACY_PAIR_TIMES;
+      const slots = getPairTimesForDay(day);
+      for (const lesson of lessons) {
+        const previous = legacy.find((s) => s.pair === lesson.pair);
+        const slot = slots.find((s) => s.pair === lesson.pair);
+        if (previous && slot && lesson.start === previous.start && lesson.end === previous.end) {
+          lesson.start = slot.start;
+          lesson.end = slot.end;
+        }
+      }
+    }
+  }
+  if (sameBellSlots(data.settings?.pairTimes, LEGACY_PAIR_TIMES)) {
+    data.settings.pairTimes = DEFAULT_PAIR_TIMES.map((s) => ({ ...s }));
+  }
+  return data;
+}
+
 /**
  * Слоты пар по дню недели (1=пн … 5=пт, 6=сб → как вт–пт)
  * @param {number|string} isoDay
  */
 export function getPairTimesForDay(isoDay) {
   const d = Number(isoDay);
-  if (d === 1 || d === 4) return PAIR_TIMES_MON_THU;
+  if (d === 1) return PAIR_TIMES_MON_THU;
+  if (d === 4) return PAIR_TIMES_THU;
   return DEFAULT_PAIR_TIMES;
 }
 
@@ -450,3 +496,4 @@ export function diffLessons(prev, next) {
   }
   return changed;
 }
+

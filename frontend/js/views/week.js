@@ -63,13 +63,8 @@ export function renderWeekView(root, data, groupName) {
   );
 
   for (let pair = 1; pair <= maxPair; pair++) {
-    const slot = pairTimes.find((p) => p.pair === pair);
     const timeCell = el('div', 'week-grid__time');
     timeCell.appendChild(el('div', '', String(pair)));
-    if (slot) {
-      timeCell.appendChild(el('div', '', slot.start));
-      timeCell.appendChild(el('div', '', slot.end));
-    }
     grid.appendChild(timeCell);
 
     for (let d = 1; d <= 6; d++) {
@@ -90,3 +85,4 @@ export function renderWeekView(root, data, groupName) {
   scroll.appendChild(grid);
   root.appendChild(scroll);
 }
+

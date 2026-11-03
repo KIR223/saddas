@@ -4,15 +4,16 @@
 
 import { LS } from '../config.js';
 import { moscowNow } from '../utils/time.js';
-import { DEFAULT_PAIR_TIMES, PAIR_TIMES_MON_THU } from './schedule.js';
+import { DEFAULT_PAIR_TIMES, PAIR_TIMES_MON_THU, PAIR_TIMES_THU, LEGACY_PAIR_TIMES, sameBellSlots } from './schedule.js';
 
 /**
  * @typedef {{ pair: number, start: string, end: string }} BellSlot
  * @typedef {{
  *   regular: BellSlot[],
- *   monThu: BellSlot[],
+ *   monThu: BellSlot[], // понедельник, прежнее имя для совместимости
+ *   thursday: BellSlot[],
  *   shortDay: BellSlot[],
- *   curator: { enabled: boolean, days: number[], start: string, end: string, title: string }
+ *   curator: { enabled: boolean, days: number[], start: string, end: string, title: string, byDay: Record<number, {start:string, end:string, title:string}> }
  * }} BellsConfig
  */
 
@@ -21,6 +22,7 @@ export function defaultBellsConfig() {
   return {
     regular: DEFAULT_PAIR_TIMES.map((x) => ({ ...x })),
     monThu: PAIR_TIMES_MON_THU.map((x) => ({ ...x })),
+    thursday: PAIR_TIMES_THU.map((x) => ({ ...x })),
     shortDay: [
       { pair: 1, start: '08:00', end: '08:40' },
       { pair: 2, start: '08:45', end: '09:25' },
@@ -33,7 +35,11 @@ export function defaultBellsConfig() {
       days: [1, 4], // пн, чт
       start: '08:00',
       end: '08:40',
-      title: 'Разговор о важном / Россия — мои горизонты',
+      title: 'Разговор о важном',
+      byDay: {
+        1: { start: '08:00', end: '08:40', title: 'Разговор о важном' },
+        4: { start: '08:30', end: '09:10', title: 'Россия — мои горизонты' },
+      },
     },
   };
 }
@@ -48,10 +54,14 @@ export function loadBellsConfig() {
       const parsed = JSON.parse(raw);
       const base = defaultBellsConfig();
       return {
-        regular: parsed.regular?.length ? parsed.regular : base.regular,
-        monThu: parsed.monThu?.length ? parsed.monThu : base.monThu,
+        regular: parsed.regular?.length && !sameBellSlots(parsed.regular, LEGACY_PAIR_TIMES) ? parsed.regular : base.regular,
+        monThu: parsed.monThu?.length && !sameBellSlots(parsed.monThu, LEGACY_PAIR_TIMES) ? parsed.monThu : base.monThu,
+        thursday: parsed.thursday?.length ? parsed.thursday : base.thursday,
         shortDay: parsed.shortDay?.length ? parsed.shortDay : base.shortDay,
-        curator: { ...base.curator, ...(parsed.curator || {}) },
+        curator: {
+          ...base.curator, ...(parsed.curator || {}),
+          byDay: { ...base.curator.byDay, ...(parsed.curator?.byDay || {}) },
+        },
       };
     }
   } catch (e) {
@@ -91,7 +101,8 @@ export function resetBellsConfig() {
 export function getBellsForDay(isoDay, cfg = loadBellsConfig(), opts = {}) {
   if (opts.short) return cfg.shortDay.map((x) => ({ ...x }));
   const d = Number(isoDay);
-  if (d === 1 || d === 4) return cfg.monThu.map((x) => ({ ...x }));
+  if (d === 1) return cfg.monThu.map((x) => ({ ...x }));
+  if (d === 4) return cfg.thursday.map((x) => ({ ...x }));
   return cfg.regular.map((x) => ({ ...x }));
 }
 
@@ -104,12 +115,13 @@ export function getCuratorForDay(isoDay, cfg = loadBellsConfig()) {
   if (!cfg.curator?.enabled) return null;
   const days = cfg.curator.days || [];
   if (!days.includes(Number(isoDay))) return null;
+  const slot = cfg.curator.byDay?.[Number(isoDay)] || cfg.curator;
   return {
     id: 'curator',
     pair: 0,
-    start: cfg.curator.start,
-    end: cfg.curator.end,
-    subject: cfg.curator.title || 'Кураторский час',
+    start: slot.start,
+    end: slot.end,
+    subject: slot.title || 'Кураторский час',
     teacher: '',
     room: '',
     type: 'consult',
@@ -199,3 +211,4 @@ export function getIsoWeekNumber(date) {
 export function weekTypeLabel(type) {
   return type === 'green' ? 'Зелёная' : type === 'red' ? 'Красная' : 'Текущая';
 }
+
