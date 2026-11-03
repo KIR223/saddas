@@ -30,7 +30,7 @@ export function mergeApiSchedule(data, schedule, info = {}) {
     const dayKey = normalizeDay(dayBlock.day);
     if (!dayKey) continue;
     const daySlots = getPairTimesForDay(dayKey);
-    const lessons = [];
+    const lessons = [...data.groups[name].days[dayKey]];
     for (const p of dayBlock.pairs || []) {
       const pair = Number(p.pair) || 0;
       if (!pair) continue;
@@ -44,7 +44,7 @@ export function mergeApiSchedule(data, schedule, info = {}) {
         room: String(p.room || '').trim(),
         type: 'other',
         subgroup: null,
-        week: 'all',
+        week: p.week || (schedule.week === 'green' ? 'odd' : schedule.week === 'red' ? 'even' : 'all'),
       }));
     }
     data.groups[name].days[dayKey] = lessons;

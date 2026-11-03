@@ -33,6 +33,7 @@ async function request(path, init = {}) {
   try {
     res = await fetch(url, {
       ...init,
+      cache: 'no-store',
       headers: {
         Accept: 'application/json',
         ...(init.headers || {}),
@@ -248,3 +249,4 @@ export function removePairOverride(onDate, pair, group, token = getAdminToken())
     }
   );
 }
+

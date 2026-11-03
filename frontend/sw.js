@@ -1,5 +1,5 @@
 /* Service Worker MelMK v6 — сброс кэша после UI-правок (темы/таймер) */
-const CACHE = 'melmk-shell-v21';
+const CACHE = 'melmk-shell-v22';
 const ASSETS = [
   './',
   './index.html',
@@ -73,6 +73,11 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
+
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(req));
+    return;
+  }
 
   if (url.pathname.includes('/admin')) {
     event.respondWith(fetch(req).catch(() => caches.match(req)));

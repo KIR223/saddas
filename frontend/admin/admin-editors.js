@@ -5,10 +5,14 @@
 import { el, clear } from '../js/utils/dom.js';
 import {
   listGroups, listTeachersAll, listRoomsAll, ensureCatalog,
-  DAY_NAMES, DAY_SHORT, TYPE_LABELS, createLesson, genId, getPairTimesForDay,
+  TYPE_LABELS, createLesson,
 } from '../js/models/schedule.js';
 import { toast } from '../js/utils/toast.js';
 import { pushAudit } from '../js/utils/audit.js';
+import { getAdminToken, setAdminToken } from '../js/api/config.js';
+import { fetchAndMergeDay, saveDatedLesson } from '../js/api/overrides.js';
+import { removeDayOverride } from '../js/api/client.js';
+import { toDateKey } from '../js/models/substitutions.js';
 
 /**
  * @param {HTMLElement} root
@@ -18,141 +22,138 @@ import { pushAudit } from '../js/utils/audit.js';
  * @param {() => void} ctx.rerender
  */
 export function renderScheduleEditor(root, ctx) {
-  const { data, persist, rerender } = ctx;
-  ensureCatalog(data);
-
+  const { data } = ctx;
   const wrap = el('div', 'adm-section');
   wrap.appendChild(el('h2', 'adm-section__title', 'Редактор расписания'));
-  wrap.appendChild(el('p', 'adm-muted', 'Меняйте отдельные пары группы без Excel. Изменения сразу в локальном хранилище.'));
-
+  wrap.appendChild(el('p', 'adm-muted', 'Изменения и отмена пар сохраняются на сервере для выбранной группы и даты. Расписание других дней не меняется.'));
   const groups = listGroups(data);
   if (!groups.length) {
-    wrap.appendChild(el('p', 'empty-state__text', 'Нет групп. Загрузите Excel во вкладке «Данные» или добавьте группу ниже.'));
-    wrap.appendChild(renderAddGroup(data, persist, rerender));
+    wrap.appendChild(el('p', 'adm-muted', 'Загрузите расписание с сервера в разделе «Данные».'));
     root.appendChild(wrap);
     return;
   }
-
-  let group = data.settings._adminEditGroup || groups[0];
-  if (!data.groups[group]) group = groups[0];
-  let day = String(data.settings._adminEditDay || Math.min(new Date().getDay() || 1, 6));
-
   const controls = el('div', 'adm-form adm-editor-controls');
-  const gField = el('div', 'field');
-  gField.appendChild(el('label', '', 'Группа'));
-  const gSel = document.createElement('select');
-  groups.forEach((g) => {
-    const o = document.createElement('option');
-    o.value = g;
-    o.textContent = g;
-    if (g === group) o.selected = true;
-    gSel.appendChild(o);
-  });
-  gField.appendChild(gSel);
-  controls.appendChild(gField);
-
-  const dField = el('div', 'field');
-  dField.appendChild(el('label', '', 'День'));
-  const dSel = document.createElement('select');
-  for (let d = 1; d <= 6; d++) {
-    const o = document.createElement('option');
-    o.value = String(d);
-    o.textContent = DAY_NAMES[d];
-    if (String(d) === day) o.selected = true;
-    dSel.appendChild(o);
+  const groupSelect = document.createElement('select');
+  for (const group of groups) {
+    const option = document.createElement('option');
+    option.value = group;
+    option.textContent = group;
+    option.selected = group === data.settings._adminEditGroup;
+    groupSelect.appendChild(option);
   }
-  dField.appendChild(dSel);
-  controls.appendChild(dField);
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.value = toDateKey();
+  for (const [label, input] of [['Группа', groupSelect], ['Дата изменения', dateInput]]) {
+    const field = el('div', 'field');
+    field.append(el('label', '', label), input);
+    controls.appendChild(field);
+  }
   wrap.appendChild(controls);
-  wrap.appendChild(renderAddGroup(data, persist, rerender));
-
+  const tokenField = el('div', 'field');
+  const tokenInput = document.createElement('input');
+  tokenInput.type = 'password';
+  tokenInput.autocomplete = 'off';
+  tokenInput.value = getAdminToken();
+  tokenInput.placeholder = 'Токен администратора сервера';
+  tokenInput.addEventListener('change', () => setAdminToken(tokenInput.value.trim()));
+  tokenField.append(el('label', '', 'Токен API'), tokenInput);
+  wrap.appendChild(tokenField);
+  const status = el('p', 'adm-muted');
+  status.setAttribute('role', 'status');
+  wrap.appendChild(status);
   const list = el('div', 'adm-lesson-list');
   wrap.appendChild(list);
+  let generation = 0;
+  let busy = false;
+  let lessons = [];
 
-  const paint = () => {
-    group = gSel.value;
-    day = dSel.value;
-    data.settings._adminEditGroup = group;
-    data.settings._adminEditDay = day;
-    clear(list);
-    const lessons = [...(data.groups[group]?.days?.[day] || [])]
-      .sort((a, b) => a.pair - b.pair);
-    if (!lessons.length) {
-      list.appendChild(el('p', 'adm-muted', 'Пар нет — добавьте первую.'));
+  const action = async (fn) => {
+    if (busy) return;
+    busy = true;
+    groupSelect.disabled = dateInput.disabled = true;
+    status.textContent = 'Сохранение на сервере…';
+    setAdminToken(tokenInput.value.trim());
+    try {
+      await fn();
+      status.textContent = 'Сохранено на сервере. Изменения доступны всем пользователям.';
+      toast('Изменения сохранены на сервере', 'success');
+      await paint(false);
+    } catch (error) {
+      status.textContent = `Не сохранено: ${error.message}`;
+      toast(status.textContent, 'error', 6000);
+    } finally {
+      busy = false;
+      groupSelect.disabled = dateInput.disabled = false;
     }
-    lessons.forEach((lesson) => {
-      list.appendChild(renderLessonEditorCard(lesson, {
-        onSave: async (patch) => {
-          Object.assign(lesson, patch);
-          await persist(true);
-          pushAudit('edit_lesson', `${group} · ${DAY_SHORT[Number(day)]} · пара ${lesson.pair}`);
-          toast('Пара сохранена', 'success');
-          paint();
-        },
-        onDelete: async () => {
-          if (!confirm(`Удалить пару «${lesson.subject || lesson.pair}»?`)) return;
-          const arr = data.groups[group].days[day];
-          const i = arr.findIndex((l) => l.id === lesson.id);
-          if (i >= 0) arr.splice(i, 1);
-          await persist(true);
-          pushAudit('delete_lesson', `${group} · пара ${lesson.pair}`);
-          toast('Пара удалена', 'success');
-          paint();
-        },
-      }));
-    });
-
-    const addBtn = el('button', 'btn btn--primary btn--block', '+ Добавить пару');
-    addBtn.type = 'button';
-    addBtn.style.marginTop = '12px';
-    addBtn.addEventListener('click', async () => {
-      if (!data.groups[group].days[day]) data.groups[group].days[day] = [];
-      const pairs = data.groups[group].days[day].map((l) => l.pair);
-      const nextPair = pairs.length ? Math.max(...pairs) + 1 : 1;
-      const slot = getPairTimesForDay(day).find((s) => s.pair === nextPair)
-        || getPairTimesForDay(day)[0]
-        || { start: '08:00', end: '09:00' };
-      const lesson = createLesson({
-        pair: nextPair,
-        start: slot.start,
-        end: slot.end,
-        subject: 'Новая пара',
-      });
-      data.groups[group].days[day].push(lesson);
-      await persist(true);
-      pushAudit('add_lesson', `${group} · ${DAY_SHORT[Number(day)]} · пара ${nextPair}`);
-      toast('Пара добавлена', 'success');
-      paint();
-    });
-    list.appendChild(addBtn);
   };
-
-  gSel.addEventListener('change', paint);
-  dSel.addEventListener('change', paint);
-  paint();
-  root.appendChild(wrap);
-}
-
-function renderAddGroup(data, persist, rerender) {
-  const box = el('div', 'adm-inline-add');
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'Новая группа, напр. ИС-21';
-  input.style.fontSize = '16px';
-  const btn = el('button', 'btn btn--outline', 'Добавить группу');
-  btn.type = 'button';
-  btn.addEventListener('click', async () => {
-    const name = input.value.trim();
-    if (!name) return toast('Введите название группы', 'warn');
-    if (data.groups[name]) return toast('Такая группа уже есть', 'warn');
-    data.groups[name] = { name, days: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] } };
-    await persist(false);
-    pushAudit('add_group', name);
-    toast(`Группа ${name} создана`, 'success');
-    rerender();
+  const card = (lesson, isNew = false) => renderLessonEditorCard(lesson, {
+    isNew,
+    dated: true,
+    onSave: (patch) => action(async () => {
+      lessons = await saveDatedLesson(groupSelect.value, dateInput.value, isNew ? patch.pair : lesson.pair, {
+        subject: patch.subject, teacher: patch.teacher, room: patch.room, cancelled: false,
+      });
+      pushAudit('edit_lesson', `${groupSelect.value} · ${dateInput.value} · пара ${patch.pair}`);
+    }),
+    onDelete: () => {
+      if (isNew) { paint(false); return; }
+      if (!confirm(`Отменить пару ${lesson.pair} на ${dateInput.value}?`)) return;
+      return action(async () => {
+        lessons = await saveDatedLesson(groupSelect.value, dateInput.value, lesson.pair, { cancelled: true });
+        pushAudit('cancel_lesson', `${groupSelect.value} · ${dateInput.value} · пара ${lesson.pair}`);
+      });
+    },
   });
-  box.append(input, btn);
-  return box;
+  const paint = async (load = true) => {
+    const id = ++generation;
+    const group = groupSelect.value;
+    const dateKey = dateInput.value;
+    data.settings._adminEditGroup = group;
+    clear(list);
+    if (!dateKey) { status.textContent = 'Выберите дату'; return; }
+    if (load) {
+      status.textContent = 'Загрузка расписания с сервера…';
+      try {
+        const day = new Date(`${dateKey}T12:00:00`).getDay() || 7;
+        const result = await fetchAndMergeDay(group, dateKey, [], day);
+        if (id !== generation) return;
+        lessons = result.lessons;
+        status.textContent = getAdminToken() ? 'Расписание загружено с сервера.' : 'Для сохранения укажите токен API.';
+      } catch (error) {
+        if (id === generation) status.textContent = `Не удалось загрузить: ${error.message}`;
+        return;
+      }
+    }
+    if (!lessons.length) list.appendChild(el('p', 'adm-muted', 'На эту дату пар нет.'));
+    lessons.forEach((lesson) => list.appendChild(card(lesson)));
+    const add = el('button', 'btn btn--primary', '+ Добавить пару');
+    add.type = 'button';
+    add.addEventListener('click', () => {
+      if (busy) return;
+      const nextPair = Array.from({length:12}, (_, i) => i + 1).find((pair) => !lessons.some((l) => l.pair === pair));
+      if (!nextPair) return toast('Все 12 номеров пар заняты', 'warn');
+      list.insertBefore(card(createLesson({pair:nextPair, subject:''}), true), add);
+      add.disabled = true;
+    });
+    list.appendChild(add);
+    const restore = el('button', 'btn btn--outline', 'Восстановить расписание на эту дату');
+    restore.type = 'button';
+    restore.addEventListener('click', () => {
+      if (!confirm('Убрать все изменения и отмены на выбранную дату?')) return;
+      action(async () => {
+        if (!getAdminToken()) throw new Error('Укажите токен API');
+        await removeDayOverride(dateKey, group);
+        const day = new Date(`${dateKey}T12:00:00`).getDay() || 7;
+        lessons = (await fetchAndMergeDay(group, dateKey, [], day)).lessons;
+      });
+    });
+    list.appendChild(restore);
+  };
+  groupSelect.addEventListener('change', () => paint());
+  dateInput.addEventListener('change', () => paint());
+  root.appendChild(wrap);
+  paint();
 }
 
 /**
@@ -166,8 +167,7 @@ function renderLessonEditorCard(lesson, handlers) {
   const form = el('div', 'adm-form');
   const fields = [
     ['pair', 'Номер', 'number', lesson.pair],
-    ['start', 'Начало', 'time', lesson.start],
-    ['end', 'Конец', 'time', lesson.end],
+    ...(!handlers.dated ? [['start', 'Начало', 'time', lesson.start], ['end', 'Конец', 'time', lesson.end]] : []),
     ['subject', 'Предмет', 'text', lesson.subject],
     ['teacher', 'Преподаватель', 'text', lesson.teacher],
     ['room', 'Кабинет', 'text', lesson.room],
@@ -181,7 +181,7 @@ function renderLessonEditorCard(lesson, handlers) {
     inp.type = type;
     inp.value = val == null ? '' : String(val);
     inp.style.fontSize = '16px';
-    if (type === 'number') inp.min = '1';
+    if (type === 'number') { inp.min = '1'; inp.max = '12'; inp.readOnly = !!handlers.dated && !handlers.isNew; }
     inputs[key] = inp;
     f.appendChild(inp);
     form.appendChild(f);
@@ -199,7 +199,7 @@ function renderLessonEditorCard(lesson, handlers) {
   });
   inputs.type = typeSel;
   typeField.appendChild(typeSel);
-  form.appendChild(typeField);
+  if (!handlers.dated) form.appendChild(typeField);
 
   const actions = el('div', 'adm-card__actions');
   const save = el('button', 'btn btn--primary', 'Сохранить');
@@ -207,15 +207,15 @@ function renderLessonEditorCard(lesson, handlers) {
   save.addEventListener('click', () => {
     handlers.onSave({
       pair: Number(inputs.pair.value) || lesson.pair,
-      start: inputs.start.value,
-      end: inputs.end.value,
+      start: inputs.start?.value || lesson.start,
+      end: inputs.end?.value || lesson.end,
       subject: inputs.subject.value.trim(),
       teacher: inputs.teacher.value.trim(),
       room: inputs.room.value.trim(),
       type: typeSel.value,
     });
   });
-  const del = el('button', 'btn btn--ghost', 'Удалить');
+  const del = el('button', 'btn btn--ghost', handlers.dated && !handlers.isNew ? 'Отменить пару на эту дату' : 'Удалить');
   del.type = 'button';
   del.addEventListener('click', () => handlers.onDelete());
   actions.append(save, del);
@@ -336,5 +336,4 @@ export function renderRoomsEditor(root, ctx) {
   root.appendChild(wrap);
 }
 
-// suppress unused
-void genId;
+

@@ -7,7 +7,7 @@ import {
   filterByWeek, DAY_NAMES, getIsoWeekday,
 } from '../models/schedule.js';
 import { applySubstitutions } from '../models/substitutions.js';
-import { withCurator, getMelmkWeekType } from '../models/bells.js';
+import { withCurator, getMelmkWeekType, weekTypeLabel } from '../models/bells.js';
 import { moscowNow } from '../utils/time.js';
 
 /**
@@ -40,22 +40,23 @@ export function renderMonthView(root, data, groupName, opts = {}) {
   nav.append(prev, title, next);
   wrap.appendChild(nav);
 
-  const paint = () => {
+  const paint = (notify = false) => {
     const d = new Date(year, month, 1);
     title.textContent = d.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
     wrap.querySelector('.month-grid')?.remove();
     wrap.appendChild(buildGrid(g, data, groupName, year, month, opts.onPickDay));
+    if (notify) opts.onChangeMonth?.(year, month);
   };
 
   prev.addEventListener('click', () => {
     month -= 1;
     if (month < 0) { month = 11; year -= 1; }
-    paint();
+    paint(true);
   });
   next.addEventListener('click', () => {
     month += 1;
     if (month > 11) { month = 0; year += 1; }
-    paint();
+    paint(true);
   });
 
   paint();
@@ -95,12 +96,14 @@ function buildGrid(g, data, groupName, year, month, onPickDay) {
 
     if (date.toDateString() === today.toDateString()) cell.classList.add('is-today');
     cell.appendChild(el('div', 'month-grid__daynum', String(day)));
+    cell.appendChild(el('div', 'month-grid__subj', `${weekTypeLabel(getMelmkWeekType(date))} неделя`));
 
     if (iso >= 1 && iso <= 6) {
       let lessons = filterByWeek(g.days[String(iso)] || [], parity);
       lessons = applySubstitutions(lessons, data, groupName, iso, date);
       lessons = withCurator(lessons, iso);
-      const count = lessons.filter((l) => !l.isCurator).length + (lessons.some((l) => l.isCurator) ? 1 : 0);
+      lessons = lessons.filter((l) => !l.cancelled);
+      const count = lessons.length;
       if (count > 0) {
         cell.classList.add('has-lessons');
         cell.appendChild(el('div', 'month-grid__count', `${count}`));
@@ -122,3 +125,4 @@ function buildGrid(g, data, groupName, year, month, onPickDay) {
 
   return grid;
 }
+

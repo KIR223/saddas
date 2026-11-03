@@ -26,7 +26,8 @@ import {
   syncBootstrap, syncGroup, syncRemainingGroups, syncFullFromApi,
 } from './api/sync.js';
 import { fetchAndMergeDay, dateKeyForIsoWeekday } from './api/overrides.js';
-import { clearServerDayCache } from './models/substitutions.js';
+import { clearServerDayCache, dateForIsoWeekday, toDateKey } from './models/substitutions.js';
+import { moscowNow } from './utils/time.js';
 import { getMelmkWeekType } from './models/bells.js';
 import { openExportSheet } from './views/export-sheet.js';
 
@@ -41,6 +42,9 @@ if (selectedDay > 6) selectedDay = 1;
 /** Пусто при входе — пользователь выбирает сам */
 let currentGroup = '';
 const apiWeek = 'current';
+let selectedDate = dateForIsoWeekday(selectedDay);
+let monthYear = moscowNow().getFullYear();
+let monthIndex = moscowNow().getMonth();
 /** @type {HTMLInputElement|null} */
 let searchInputRef = null;
 let prefetchStarted = false;
@@ -57,6 +61,11 @@ function readUrlState() {
     if (view === 'day' || view === 'week' || view === 'month') scheduleMode = view;
     const day = Number(u.searchParams.get('day'));
     if (day >= 1 && day <= 6) selectedDay = day;
+    const dateKey = u.searchParams.get('date');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey || '')) {
+      const date = new Date(`${dateKey}T12:00:00`);
+      if (!Number.isNaN(date.getTime()) && toDateKey(date) === dateKey) { selectedDate = date; selectedDay = getIsoWeekday(date); }
+    } else selectedDate = dateForIsoWeekday(selectedDay);
     const t = u.searchParams.get('tab');
     if (t === 'home' || t === 'bells' || t === 'teachers') tab = t;
   } catch { /* ignore */ }
@@ -67,6 +76,7 @@ function writeUrlState() {
     const u = new URL(location.href);
     u.searchParams.set('view', scheduleMode);
     u.searchParams.set('day', String(selectedDay));
+    u.searchParams.set('date', toDateKey(selectedDate));
     u.searchParams.set('tab', tab);
     history.replaceState(null, '', u.pathname + u.search + u.hash);
   } catch { /* ignore */ }
@@ -110,9 +120,9 @@ async function hydrateDayOverrides() {
 
   const dates = [];
   if (scheduleMode === 'day') {
-    dates.push({ day: selectedDay, key: dateKeyForIsoWeekday(selectedDay) });
+    dates.push({ day: selectedDay, key: toDateKey(selectedDate) });
     const today = getIsoWeekday();
-    if (today !== selectedDay && today >= 1 && today <= 6) {
+    if (toDateKey(selectedDate) !== toDateKey() && today >= 1 && today <= 6) {
       dates.push({ day: today, key: dateKeyForIsoWeekday(today) });
     }
   } else if (scheduleMode === 'week') {
@@ -120,9 +130,11 @@ async function hydrateDayOverrides() {
       dates.push({ day: d, key: dateKeyForIsoWeekday(d) });
     }
   } else {
-    const today = getIsoWeekday();
-    if (today >= 1 && today <= 6) {
-      dates.push({ day: today, key: dateKeyForIsoWeekday(today) });
+    const last = new Date(monthYear, monthIndex + 1, 0).getDate();
+    for (let d = 1; d <= last; d++) {
+      const date = new Date(monthYear, monthIndex, d, 12);
+      const day = getIsoWeekday(date);
+      if (day <= 6) dates.push({ day, key: toDateKey(date) });
     }
   }
 
@@ -130,12 +142,13 @@ async function hydrateDayOverrides() {
   if (stamp === dayHydrateKey) return;
   dayHydrating = true;
   try {
-    const parity = getMelmkWeekType() === 'green' ? 'odd' : 'even';
+    const group = currentGroup;
     let changed = false;
     await Promise.all(dates.map(async ({ day, key }) => {
       try {
+        const parity = getMelmkWeekType(new Date(`${key}T12:00:00`)) === 'green' ? 'odd' : 'even';
         const base = filterByWeek(g.days[String(day)] || [], parity);
-        await fetchAndMergeDay(currentGroup, key, base, day);
+        await fetchAndMergeDay(group, key, base, day);
         changed = true;
       } catch (e) {
         console.warn('day override', key, e);
@@ -145,6 +158,7 @@ async function hydrateDayOverrides() {
     if (changed) render();
   } finally {
     dayHydrating = false;
+    hydrateDayOverrides();
   }
 }
 
@@ -199,6 +213,7 @@ async function selectGroup(g) {
   tab = 'home';
   showSearchPanel = false;
   selectedDay = Math.min(getIsoWeekday(), 6) || 1;
+  selectedDate = dateForIsoWeekday(selectedDay);
   render();
 }
 
@@ -294,7 +309,7 @@ function renderHome(content) {
     return;
   }
 
-  if (scheduleMode === 'day') {
+  if (scheduleMode === 'day' && toDateKey(selectedDate) === toDateKey()) {
     const nowRoot = el('div');
     nowRoot.id = 'now-root';
     content.appendChild(nowRoot);
@@ -338,9 +353,10 @@ function renderHome(content) {
       chip.setAttribute('role', 'tab');
       chip.setAttribute('aria-selected', d === selectedDay ? 'true' : 'false');
       if (d === selectedDay) chip.classList.add('is-active');
-      if (d === today) chip.classList.add('is-today');
+      if (d === today && toDateKey(dateForIsoWeekday(d, selectedDate)) === toDateKey()) chip.classList.add('is-today');
       chip.addEventListener('click', () => {
         selectedDay = d;
+        selectedDate = dateForIsoWeekday(d, selectedDate);
         showSearchPanel = false;
         writeUrlState();
         render();
@@ -350,15 +366,24 @@ function renderHome(content) {
     scheduleRoot.appendChild(switcher);
     const dayMount = el('div');
     scheduleRoot.appendChild(dayMount);
-    renderDayView(dayMount, state, currentGroup, selectedDay);
+    renderDayView(dayMount, state, currentGroup, selectedDay, selectedDate);
     requestAnimationFrame(centerActiveDayChip);
   } else if (scheduleMode === 'week') {
     renderWeekView(scheduleRoot, state, currentGroup);
   } else {
     renderMonthView(scheduleRoot, state, currentGroup, {
-      onPickDay: (isoDay) => {
+      year: monthYear,
+      month: monthIndex,
+      onChangeMonth: (year, month) => {
+        monthYear = year;
+        monthIndex = month;
+        hydrateDayOverrides();
+      },
+      onPickDay: (isoDay, date) => {
         selectedDay = isoDay;
+        selectedDate = date;
         scheduleMode = 'day';
+        writeUrlState();
         render();
       },
     });
@@ -493,12 +518,14 @@ function setupHotkeys() {
     if (!currentGroup || scheduleMode !== 'day') return;
     if (e.key === 'ArrowLeft') {
       selectedDay = selectedDay <= 1 ? 6 : selectedDay - 1;
+      selectedDate = dateForIsoWeekday(selectedDay, selectedDate);
       tab = 'home';
       showSearchPanel = false;
       render();
     }
     if (e.key === 'ArrowRight') {
       selectedDay = selectedDay >= 6 ? 1 : selectedDay + 1;
+      selectedDate = dateForIsoWeekday(selectedDay, selectedDate);
       tab = 'home';
       showSearchPanel = false;
       render();
@@ -587,6 +614,8 @@ async function boot() {
 
   setInterval(() => {
     if (document.hidden) return;
+    dayHydrateKey = '';
+    hydrateDayOverrides();
     if (tab === 'home' && currentGroup && hasSchedule(state) && !showSearchPanel && scheduleMode === 'day') {
       const nowRoot = document.getElementById('now-root');
       if (nowRoot) renderNowWidget(nowRoot, state, currentGroup);
@@ -595,6 +624,8 @@ async function boot() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
+    dayHydrateKey = '';
+    hydrateDayOverrides();
     if (tab === 'home' && currentGroup && scheduleMode === 'day') {
       const nowRoot = document.getElementById('now-root');
       if (nowRoot) renderNowWidget(nowRoot, state, currentGroup);
@@ -616,3 +647,4 @@ boot().catch((e) => {
   console.error(e);
   toast('Критическая ошибка запуска', 'error');
 });
+

@@ -13,16 +13,6 @@ import { createLesson, getPairTimesForDay, getIsoWeekday } from '../models/sched
 import { moscowNow } from '../utils/time.js';
 
 /**
- * Есть ли реальные отличия от базового недельного расписания
- * @param {object} dayOut
- * @param {import('../models/schedule.js').Lesson[]} merged
- */
-function shouldCacheDayOverride(dayOut, merged) {
-  if (dayOut?.custom) return true;
-  return (merged || []).some((l) => l.replaced || l.cancelled);
-}
-
-/**
  * Список дат YYYY-MM-DD от from до to включительно (макс. 120 дней)
  * @param {string} [from]
  * @param {string} [to]
@@ -173,7 +163,8 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
     const subject = String(p.subject || '').trim();
     const teacher = String(p.teacher || '').trim();
     const room = String(p.room || '').trim();
-    const cancelled = /отмен/i.test(subject) || subject === '';
+    const cancelled = p.cancelled === true || /отмен/i.test(subject) || subject === '';
+    if (cancelled) continue;
     const changed = custom
       || !base
       || base.subject !== subject
@@ -208,9 +199,20 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
 export async function fetchAndMergeDay(group, dateKey, baseLessons, dayKey) {
   const dayOut = await fetchScheduleDay(group, dateKey);
   const lessons = mergeDayScheduleOut(dayOut, baseLessons, dayKey);
-  // Без custom/замен не перекрываем недельное расписание с /api/schedule
-  if (shouldCacheDayOverride(dayOut, lessons)) {
-    setServerDay(group, dateKey, lessons, dayKey);
-  }
+  setServerDay(group, dateKey, lessons, dayKey);
   return { dayOut, lessons };
+}
+
+
+/** Сохранить или отменить пару на одну дату; ответ сервера обновляет кэш дня. */
+export async function saveDatedLesson(group, dateKey, pair, patch, token = getAdminToken()) {
+  if (!token) throw new Error('Нужен токен API. Укажите его в поле «Токен API» перед сохранением.');
+  if (!group || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) throw new Error('Выберите группу и дату');
+  if (!Number.isInteger(pair) || pair < 1 || pair > 12) throw new Error('Номер пары должен быть от 1 до 12');
+  if (!patch.cancelled && !String(patch.subject || '').trim()) throw new Error('Укажите предмет');
+  const dayOut = await savePairOverride(dateKey, pair, group, patch, token);
+  const day = getIsoWeekday(new Date(`${dateKey}T12:00:00`));
+  const lessons = mergeDayScheduleOut(dayOut, [], day);
+  setServerDay(group, dateKey, lessons, day);
+  return lessons;
 }

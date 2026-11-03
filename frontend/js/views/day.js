@@ -7,7 +7,7 @@ import { filterByWeek, DAY_NAMES, getIsoWeekday } from '../models/schedule.js';
 import { findNowNext, toMinutes, nowMinutes } from '../utils/time.js';
 import { renderLessonCard } from './lesson.js';
 import { loadFlags } from '../storage/store.js';
-import { withCurator, getMelmkWeekType } from '../models/bells.js';
+import { withCurator, getMelmkWeekType, weekTypeLabel } from '../models/bells.js';
 import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.js';
 
 /**
@@ -16,7 +16,7 @@ import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.j
  * @param {string} groupName
  * @param {number} day — 1..6
  */
-export function renderDayView(root, data, groupName, day) {
+export function renderDayView(root, data, groupName, day, date = dateForIsoWeekday(day)) {
   clear(root);
   const g = data.groups[groupName];
   if (!g) {
@@ -24,12 +24,12 @@ export function renderDayView(root, data, groupName, day) {
     return;
   }
 
-  const title = el('h2', 'section-title', DAY_NAMES[day] || `День ${day}`);
+  const title = el('h2', 'section-title', `${DAY_NAMES[day] || `День ${day}`} · ${date.toLocaleDateString('ru-RU')} · ${weekTypeLabel(getMelmkWeekType(date))} неделя`);
   root.appendChild(title);
 
-  const parity = getMelmkWeekType() === 'green' ? 'odd' : 'even';
+  const parity = getMelmkWeekType(date) === 'green' ? 'odd' : 'even';
   let lessons = filterByWeek(g.days[String(day)] || [], parity);
-  lessons = applySubstitutions(lessons, data, groupName, day, dateForIsoWeekday(day));
+  lessons = applySubstitutions(lessons, data, groupName, day, date);
   lessons = [...lessons].sort((a, b) => a.pair - b.pair || String(a.subgroup || '').localeCompare(String(b.subgroup || '')));
   lessons = withCurator(lessons, day);
 
@@ -41,11 +41,11 @@ export function renderDayView(root, data, groupName, day) {
     return;
   }
 
-  const { current } = findNowNext(lessons);
+  const today = date.toDateString() === dateForIsoWeekday(getIsoWeekday()).toDateString();
+  const { current } = today ? findNowNext(lessons) : { current: null };
   const flags = loadFlags();
   const changed = new Set(flags.highlightedIds || []);
   const nm = nowMinutes();
-  const today = getIsoWeekday() === day;
 
   const list = el('div', 'lesson-list');
   list.setAttribute('role', 'list');
@@ -65,3 +65,4 @@ export function renderDayView(root, data, groupName, day) {
 
   root.appendChild(list);
 }
+

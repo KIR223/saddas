@@ -783,6 +783,11 @@ async function onWizardNext() {
       }),
   };
 
+  const apiResult = await pushSubstitutionToApi(payload);
+  if (!apiResult.ok) {
+    toast(apiResult.error || 'Не удалось записать замену в БД', 'error', 6000);
+    return;
+  }
   if (subWizard.editId) {
     updateSubstitution(scheduleData, subWizard.editId, payload);
     pushAudit('sub_update', `${payload.group} д${payload.day} п${payload.pair}`);
@@ -792,12 +797,7 @@ async function onWizardNext() {
   }
   await persistSchedule();
 
-  const apiResult = await pushSubstitutionToApi(payload);
-  if (!apiResult.ok) {
-    toast(apiResult.error || 'Не удалось записать замену в БД', 'error', 6000);
-  } else {
-    toast(`Сохранено: ${apiResult.summary}`, 'success', 5000);
-  }
+  toast(`Сохранено на сервере: ${apiResult.summary}`, 'success', 5000);
 
   subWizard = defaultWizardDraft();
   clearSubDraftStorage();

@@ -83,6 +83,19 @@ async function enrichFromApiCatalog(data) {
   return data;
 }
 
+/** Полный шаблон группы: обе недели, независимо от сегодняшней даты. */
+export async function fetchCalendarSchedule(group) {
+  const templates = await Promise.all(['green', 'red'].map((week) => fetchSchedule(group, week)));
+  return {
+    group,
+    week: 'all',
+    days: templates.flatMap((schedule) => (schedule.days || []).map((day) => ({
+      ...day,
+      pairs: day.pairs.map((pair) => ({ ...pair, week: schedule.week === 'green' ? 'odd' : 'even' })),
+    }))),
+  };
+}
+
 /**
  * Полная загрузка с API (все группы)
  * @param {'current'|'green'|'red'} [week]
@@ -94,7 +107,7 @@ export async function syncFullFromApi(week = 'current', onProgress) {
   let done = 0;
   const schedules = await poolMap(names, 6, async (g) => {
     try {
-      const sch = await fetchSchedule(g, week);
+      const sch = await fetchCalendarSchedule(g);
       done += 1;
       if (onProgress) onProgress(done, names.length);
       return sch;
@@ -131,7 +144,7 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
   data.settings.defaultGroup = group;
 
   if (group) {
-    const sch = await fetchSchedule(group, week);
+    const sch = await fetchCalendarSchedule(group);
     mergeApiSchedule(data, sch, info);
   }
 
@@ -146,7 +159,7 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
  * @param {'current'|'green'|'red'} [week]
  */
 export async function syncGroup(data, group, week = 'current') {
-  const sch = await fetchSchedule(group, week);
+  const sch = await fetchCalendarSchedule(group);
   mergeApiSchedule(data, sch);
   data.settings.defaultGroup = group;
   await saveSchedule(data, { detectChanges: false, keepPrev: false });
@@ -168,7 +181,7 @@ export async function syncRemainingGroups(data, week = 'current', onUpdate) {
 
   await poolMap(missing, 6, async (g) => {
     try {
-      const sch = await fetchSchedule(g, week);
+      const sch = await fetchCalendarSchedule(g);
       mergeApiSchedule(data, sch);
       if (onUpdate) onUpdate(snapshot(data));
     } catch (e) {
@@ -203,3 +216,4 @@ export async function uploadAndSync(file, token, week = 'current') {
 export function emptyState() {
   return createEmptySchedule();
 }
+
