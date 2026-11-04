@@ -5,75 +5,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.catalog import room_names, teacher_names
+from app.migrations import apply_migrations
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS lessons (
-    id INTEGER PRIMARY KEY,
-    group_name TEXT NOT NULL,
-    day TEXT NOT NULL,
-    pair INTEGER NOT NULL,
-    week TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    teacher TEXT NOT NULL DEFAULT '',
-    room TEXT NOT NULL DEFAULT ''
-);
-
-CREATE INDEX IF NOT EXISTS idx_lessons_group_week ON lessons(group_name, week);
-
-CREATE TABLE IF NOT EXISTS meta (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS rooms (
-    name TEXT PRIMARY KEY
-);
-
-CREATE TABLE IF NOT EXISTS teachers (
-    name TEXT PRIMARY KEY
-);
-
-CREATE TABLE IF NOT EXISTS bell_regular (
-    pair INTEGER PRIMARY KEY,
-    start_time TEXT NOT NULL,
-    end_time TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS bell_short_dates (
-    on_date TEXT PRIMARY KEY
-);
-
-CREATE TABLE IF NOT EXISTS bell_short_days (
-    on_date TEXT NOT NULL,
-    pair INTEGER NOT NULL,
-    start_time TEXT NOT NULL,
-    end_time TEXT NOT NULL,
-    PRIMARY KEY (on_date, pair)
-);
-
-CREATE TABLE IF NOT EXISTS lesson_overrides (
-    on_date TEXT NOT NULL,
-    group_name TEXT NOT NULL,
-    pair INTEGER NOT NULL,
-    cancelled INTEGER NOT NULL DEFAULT 0,
-    subject TEXT NOT NULL DEFAULT '',
-    teacher TEXT NOT NULL DEFAULT '',
-    room TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (on_date, group_name, pair)
-);
-"""
+# DDL живёт в app/migrations/versions/, не здесь.
 
 
 def db_path() -> str:
     return os.environ.get("DATABASE_PATH", "data/schedule.db")
 
 
-def connect() -> sqlite3.Connection:
+def connect(*, migrate: bool = True) -> sqlite3.Connection:
     path = db_path()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
-    conn.executescript(SCHEMA)
+    if migrate:
+        apply_migrations(conn)
     return conn
 
 

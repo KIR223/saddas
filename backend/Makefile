@@ -1,4 +1,4 @@
-.PHONY: dev test
+.PHONY: dev test migrate
 
 VENV := .venv
 PY := $(VENV)/bin/python
@@ -12,3 +12,8 @@ test:
 	test -d $(VENV) || python3 -m venv $(VENV)
 	$(PY) -m pip install -r requirements.txt
 	$(PY) -m unittest discover -s tests -v
+
+migrate:
+	test -d $(VENV) || python3 -m venv $(VENV)
+	$(PY) -m pip install -r requirements.txt
+	$(PY) -m app.migrate
