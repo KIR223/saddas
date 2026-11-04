@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "54c3c4d3632ba14c",
+        "id": "4924250bc59fb8fa",
         "type": "tabs",
         "children": [
           {
-            "id": "871ef46a1fcb58a1",
+            "id": "2ebb502afd26c445",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -188,10 +188,14 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "871ef46a1fcb58a1",
+  "active": "2ebb502afd26c445",
   "lastOpenFiles": [
-    "processes/Обзор.md",
+    "roadmap/Задачи.md",
+    "roadmap/Обзор.md",
+    "architecture/Развёртывание.md",
     "Главная.md",
+    "roadmap",
+    "processes/Обзор.md",
     "processes/Администрирование.md",
     "processes/Просмотр расписания.md",
     "processes/Звонки.md",
@@ -200,7 +204,6 @@
     "processes/Замены.md",
     "processes",
     "Глоссарий.md",
-    "architecture/Развёртывание.md",
     "architecture/API.md",
     "architecture/Данные.md",
     "architecture/Фронтенд.md",
