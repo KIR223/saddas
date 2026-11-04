@@ -13,7 +13,7 @@
 3. `uploadAndSync`: multipart на API, затем полная выгрузка всех групп (`syncFullFromApi`).
 4. Сервер проверяет токен, расширение, размер ≤ 20 МБ.
 5. `parse_workbook` по всем листам. Если занятий 0 — 400, в `detail.warnings` листы без групп.
-6. `replace_schedule`: новые `lessons`, пересобранные `rooms`/`teachers`, `meta.filename` / `uploaded_at` / `title`.
+6. `replace_schedule`: новые `lessons` (ФИО и кабинеты канонизируются так же, как справочник), пересобранные `rooms`/`teachers`, `meta.filename` / `uploaded_at` / `title` (`revision` в API — то же значение).
 7. **Не трогаются:** `lesson_overrides`, таблицы звонков.
 
 Ответ upload: число групп, записей занятий, кабинетов, преподавателей, предупреждения.

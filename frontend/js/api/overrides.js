@@ -173,8 +173,8 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
     out.push(createLesson({
       ...(base || {}),
       pair,
-      start: base?.start || slot.start,
-      end: base?.end || slot.end,
+      start: p.start || base?.start || slot.start,
+      end: p.end || base?.end || slot.end,
       subject: cancelled ? 'Пара отменена' : subject,
       teacher: cancelled ? '' : teacher,
       room: cancelled ? '' : room,

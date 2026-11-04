@@ -103,8 +103,7 @@ export function exportIcs(data, groupName) {
         const date = new Date(monday);
         date.setDate(monday.getDate() + week * 7 + (d - 1));
         const weekType = getMelmkWeekType(date);
-        const parity = weekType === 'green' ? 'odd' : 'even';
-        const lessons = filterByWeek(g.days[String(d)] || [], parity);
+        const lessons = filterByWeek(g.days[String(d)] || [], weekType);
         for (const l of lessons) {
           const [sh, sm] = (l.start || '08:30').split(':').map(Number);
           const [eh, em] = (l.end || '10:00').split(':').map(Number);

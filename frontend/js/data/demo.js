@@ -39,8 +39,8 @@ export function createDemoSchedule() {
         mk({ pair: 2, subject: 'Дискретная математика', teacher: 'Иванова А.С.', room: '301', type: 'lecture' }),
         mk({ pair: 3, subject: 'Дискретная математика', teacher: 'Иванова А.С.', room: '303', type: 'practice' }),
         mk({ pair: 4, subject: 'Операционные системы', teacher: 'Волков М.Р.', room: '220', type: 'lecture' }),
-        mk({ pair: 5, subject: 'Операционные системы', teacher: 'Волков М.Р.', room: '221', type: 'lab', week: 'odd' }),
-        mk({ pair: 5, subject: 'Сети', teacher: 'Волков М.Р.', room: '222', type: 'lab', week: 'even' }),
+        mk({ pair: 5, subject: 'Операционные системы', teacher: 'Волков М.Р.', room: '221', type: 'lab', week: 'green' }),
+        mk({ pair: 5, subject: 'Сети', teacher: 'Волков М.Р.', room: '222', type: 'lab', week: 'red' }),
       ],
       4: [
         mk({ pair: 1, subject: 'Программирование', teacher: 'Петров В.И.', room: '215', type: 'lecture' }),

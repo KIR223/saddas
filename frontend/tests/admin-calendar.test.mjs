@@ -69,8 +69,8 @@ globalThis.fetch = async (url, init = {}) => {
 const full = await fetchCalendarSchedule('Группа');
 const data = buildFromApi(['Группа'], [full]);
 const tuesday = data.groups['Группа'].days[2];
-assert.equal(filterByWeek(tuesday,'odd').length,3);
-assert.equal(filterByWeek(tuesday,'even').length,1);
+assert.equal(filterByWeek(tuesday,'green').length,3);
+assert.equal(filterByWeek(tuesday,'red').length,1);
 const monthRoot = new Element('main');
 const dayRoot = new Element('main');
 let picked;

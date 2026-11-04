@@ -7,6 +7,7 @@ class InfoOut(BaseModel):
     week_end: str
     title: str
     uploaded_at: str | None
+    revision: str | None
 
 
 class GroupsOut(BaseModel):
@@ -18,6 +19,8 @@ class PairOut(BaseModel):
     subject: str
     teacher: str
     room: str
+    start: str | None = None
+    end: str | None = None
 
 
 class DayOut(BaseModel):
@@ -29,6 +32,7 @@ class ScheduleOut(BaseModel):
     group: str
     week: str
     days: list[DayOut]
+    revision: str | None = None
 
 
 class UploadOut(BaseModel):
@@ -94,3 +98,4 @@ class DayScheduleOut(BaseModel):
     week: str
     custom: bool
     pairs: list[PairOut]
+    revision: str | None = None

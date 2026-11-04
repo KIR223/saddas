@@ -3,7 +3,7 @@ import { mergeDayScheduleOut } from '../js/api/overrides.js';
 import { createLesson } from '../js/models/schedule.js';
 
 const base = [1,2,3,4,5].map((pair) => createLesson({
-  pair,subject:`Предмет ${pair}`,teacher:`Учитель ${pair}`,room:String(200+pair),week:'odd',
+  pair,subject:`Предмет ${pair}`,teacher:`Учитель ${pair}`,room:String(200+pair),week:'green',
 }));
 const pairs = base.slice(0,3).map(({pair,subject,teacher,room}) => ({pair,subject,teacher,room}));
 

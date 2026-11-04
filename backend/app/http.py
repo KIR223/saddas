@@ -5,7 +5,8 @@ from datetime import date
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-from app.db import list_groups, resolve_day
+from app.catalog import canonicalize_lesson_teacher, canonicalize_room
+from app.db import get_meta, get_regular_bells, get_short_bells, list_groups, resolve_day
 from app.parser import DAY_ORDER
 from app.schemas import BellSlotIn
 from app.week import current_week
@@ -75,34 +76,61 @@ def bells_payload(kind: str, pairs: list[dict], on_date: str | None = None) -> d
     return {"kind": kind, "date": on_date, "pairs": pairs}
 
 
+def snapshot_revision(meta: dict[str, str] | None = None) -> str | None:
+    data = meta if meta is not None else get_meta()
+    return data.get("uploaded_at")
+
+
 def day_names(on: date) -> tuple[str, str]:
     return DAY_ORDER[on.weekday()], current_week(on)
+
+
+def _bells_for_date(on: date) -> dict[int, dict]:
+    iso = on.isoformat()
+    slots = get_short_bells(iso)
+    if slots is None:
+        slots = get_regular_bells()
+    return {item["pair"]: item for item in slots}
+
+
+def _pair_fields(row) -> dict:
+    return {
+        "pair": row["pair"],
+        "subject": row["subject"],
+        "teacher": canonicalize_lesson_teacher(row["teacher"]),
+        "room": canonicalize_room(row["room"]),
+    }
 
 
 def day_payload(group: str, on: date) -> dict:
     day_name, week = day_names(on)
     pairs, custom = resolve_day(group, day_name, week, on.isoformat())
+    slots = _bells_for_date(on)
+    timed = []
+    for item in pairs:
+        slot = slots.get(item["pair"])
+        timed.append(
+            {
+                **item,
+                "start": slot["start"] if slot else None,
+                "end": slot["end"] if slot else None,
+            }
+        )
     return {
         "group": group,
         "date": on.isoformat(),
         "day": day_name,
         "week": week,
         "custom": custom,
-        "pairs": pairs,
+        "pairs": timed,
+        "revision": snapshot_revision(),
     }
 
 
 def schedule_payload(group: str, week: str, rows) -> dict:
     by_day: dict[str, list[dict]] = {}
     for row in rows:
-        by_day.setdefault(row["day"], []).append(
-            {
-                "pair": row["pair"],
-                "subject": row["subject"],
-                "teacher": row["teacher"],
-                "room": row["room"],
-            }
-        )
+        by_day.setdefault(row["day"], []).append(_pair_fields(row))
     days = []
     seen = set()
     for day in DAY_ORDER:
@@ -112,4 +140,9 @@ def schedule_payload(group: str, week: str, rows) -> dict:
     for day, pairs in by_day.items():
         if day not in seen:
             days.append({"day": day, "pairs": pairs})
-    return {"group": group, "week": week, "days": days}
+    return {
+        "group": group,
+        "week": week,
+        "days": days,
+        "revision": snapshot_revision(),
+    }

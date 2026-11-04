@@ -1,4 +1,15 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
+
+MOSCOW = ZoneInfo("Europe/Moscow")
+
+
+def now_moscow() -> datetime:
+    return datetime.now(MOSCOW)
+
+
+def moscow_today() -> date:
+    return now_moscow().date()
 
 
 def week_bounds(day: date) -> tuple[date, date]:
@@ -8,7 +19,7 @@ def week_bounds(day: date) -> tuple[date, date]:
 
 def current_week(day: date | None = None) -> str:
     if day is None:
-        day = date.today()
+        day = moscow_today()
     # Нечётная ISO-неделя — зелёная, чётная — красная.
     if day.isocalendar().week % 2 == 1:
         return "green"

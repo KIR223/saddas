@@ -146,8 +146,8 @@ async function hydrateDayOverrides() {
     let changed = false;
     await Promise.all(dates.map(async ({ day, key }) => {
       try {
-        const parity = getMelmkWeekType(new Date(`${key}T12:00:00`)) === 'green' ? 'odd' : 'even';
-        const base = filterByWeek(g.days[String(day)] || [], parity);
+        const week = getMelmkWeekType(new Date(`${key}T12:00:00`));
+        const base = filterByWeek(g.days[String(day)] || [], week);
         await fetchAndMergeDay(group, key, base, day);
         changed = true;
       } catch (e) {

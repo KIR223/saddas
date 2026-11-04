@@ -247,7 +247,7 @@ export function importRawJson(text) {
   if (!data.settings) data.settings = createEmptySchedule().settings;
   if (!data.meta) data.meta = createEmptySchedule().meta;
   if (!data.catalog) data.catalog = { teachers: [], rooms: [] };
-  return data;
+  return migrateScheduleBells(data);
 }
 
 /**

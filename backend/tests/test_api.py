@@ -45,6 +45,7 @@ class ApiTest(unittest.TestCase):
         self.assertIn(payload["week"], ("green", "red"))
         self.assertEqual(payload["title"], "")
         self.assertIsNone(payload["uploaded_at"])
+        self.assertIsNone(payload["revision"])
 
         self.assertEqual(self.client.get("/api/groups").json(), {"groups": []})
 
@@ -89,6 +90,8 @@ class ApiTest(unittest.TestCase):
         info_after = self.client.get("/api/info").json()
         self.assertIn("Расписание занятий", info_after["title"])
         self.assertIsNotNone(info_after["uploaded_at"])
+        self.assertEqual(info_after["revision"], info_after["uploaded_at"])
+        self.assertEqual(schedule.json()["revision"], info_after["revision"])
 
         self.assertEqual(self.client.get("/api/rooms").json(), {"rooms": ["307"]})
         self.assertEqual(self.client.get("/api/teachers").json(), {"teachers": ["Курницкая Т.С."]})
@@ -225,6 +228,54 @@ class ApiTest(unittest.TestCase):
         back = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": on})
         self.assertEqual(back.json()["pairs"][0]["subject"], "Физика")
         self.assertFalse(back.json()["custom"])
+
+    def test_day_includes_bell_slots_and_revision(self):
+        self.upload_default()
+        regular = [
+            {"pair": 1, "start": "08:30", "end": "10:00"},
+            {"pair": 2, "start": "10:10", "end": "11:40"},
+        ]
+        self.client.put("/api/admin/bells", headers=self.auth(), json={"pairs": regular})
+        info = self.client.get("/api/info").json()
+        monday = "2026-10-05"
+        day = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": monday})
+        body = day.json()
+        self.assertEqual(body["revision"], info["revision"])
+        self.assertEqual(body["pairs"][0]["start"], "08:30")
+        self.assertEqual(body["pairs"][0]["end"], "10:00")
+
+        short = [{"pair": 1, "start": "08:30", "end": "09:05"}]
+        self.client.put(f"/api/admin/bells/{monday}", headers=self.auth(), json={"pairs": short})
+        shortened = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": monday})
+        self.assertEqual(shortened.json()["pairs"][0]["start"], "08:30")
+        self.assertEqual(shortened.json()["pairs"][0]["end"], "09:05")
+
+    def test_lesson_teacher_matches_catalog(self):
+        book = Workbook()
+        sheet = book.active
+        sheet["A1"] = "Расписание занятий"
+        sheet["C2"] = "ТМ-261"
+        sheet["A3"] = "Понедельник"
+        sheet.merge_cells("A3:A4")
+        sheet["B3"] = 1
+        sheet.merge_cells("B3:B4")
+        sheet["C4"] = "Практика\nБашилова Ю.А"
+        sheet["C4"].fill = PatternFill(start_color="C6E0B4", end_color="C6E0B4", fill_type="solid")
+        sheet["D4"] = 307
+        buffer = io.BytesIO()
+        book.save(buffer)
+        uploaded = self.client.post(
+            "/api/admin/upload",
+            headers=self.auth(),
+            files={"file": ("schedule.xlsx", buffer.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        )
+        self.assertEqual(uploaded.status_code, 200, uploaded.text)
+        teacher = "Башилова Ю.А."
+        self.assertEqual(self.client.get("/api/teachers").json(), {"teachers": [teacher]})
+        schedule = self.client.get("/api/schedule", params={"group": "ТМ-261", "week": "green"})
+        self.assertEqual(schedule.json()["days"][0]["pairs"][0]["teacher"], teacher)
+        day = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": "2026-10-05"})
+        self.assertEqual(day.json()["pairs"][0]["teacher"], teacher)
 
 
 if __name__ == "__main__":

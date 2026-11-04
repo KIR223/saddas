@@ -95,8 +95,8 @@ export function normalizeType(val) {
 export function normalizeWeek(val) {
   const s = String(val ?? '').trim().toLowerCase();
   if (!s || s === 'все' || s === 'all' || s === 'каждая') return 'all';
-  if (s.includes('неч') || s === 'odd' || s === '1') return 'odd';
-  if (s.includes('чёт') || s.includes('чет') || s === 'even' || s === '2') return 'even';
+  if (s.includes('зелён') || s.includes('зелен') || s === 'green' || s.includes('неч') || s === 'odd' || s === '1') return 'green';
+  if (s.includes('красн') || s === 'red' || s.includes('чёт') || s.includes('чет') || s === 'even' || s === '2') return 'red';
   return 'all';
 }
 

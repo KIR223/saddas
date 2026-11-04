@@ -47,3 +47,19 @@ def canonicalize_teacher(value: str) -> str:
     if not letters:
         return surname
     return f"{surname} {'.'.join(letters)}."
+
+
+def canonicalize_lesson_teacher(value: str) -> str:
+    names = split_teachers(value)
+    if names:
+        return " ".join(names)
+    return " ".join((value or "").split())
+
+
+def canonicalize_room(value: str) -> str:
+    parts = []
+    for part in re.split(r"[,;\n]+", value or ""):
+        name = " ".join(part.split())
+        if name:
+            parts.append(name)
+    return ", ".join(parts)

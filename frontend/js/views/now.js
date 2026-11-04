@@ -47,8 +47,7 @@ export function renderNowWidget(root, data, groupName) {
     return;
   }
 
-  const parity = weekType === 'green' ? 'odd' : 'even';
-  let lessons = filterByWeek(g.days[String(day)] || [], parity);
+  let lessons = filterByWeek(g.days[String(day)] || [], weekType);
   lessons = applySubstitutions(lessons, data, groupName, day, dateForIsoWeekday(day));
   lessons = withCurator(lessons, day);
   const snap = findNowNext(lessons, now);

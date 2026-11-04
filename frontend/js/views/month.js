@@ -89,7 +89,7 @@ function buildGrid(g, data, groupName, year, month, onPickDay) {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
-    const parity = getMelmkWeekType(date) === 'green' ? 'odd' : 'even';
+    const parity = getMelmkWeekType(date);
     const iso = getIsoWeekday(date);
     const cell = el('button', 'month-grid__cell');
     cell.type = 'button';

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { defaultBellsConfig, getBellsForDay, getCuratorForDay, computeBreaks, loadBellsConfig, saveBellsConfig, validateBellSlots } from './bells.js';
-import { getPairTimesForDay, LEGACY_PAIR_TIMES, PAIR_TIMES_MON_THU, migrateScheduleBells } from './schedule.js';
+import { defaultBellsConfig, getBellsForDay, getCuratorForDay, computeBreaks, loadBellsConfig, saveBellsConfig, validateBellSlots, getMelmkWeekType } from './bells.js';
+import { getPairTimesForDay, LEGACY_PAIR_TIMES, PAIR_TIMES_MON_THU, migrateScheduleBells, migrateWeekColors, filterByWeek } from './schedule.js';
 import { applyApiBells, lessonsFromDaySchedule } from '../api/adapt.js';
-import { rowsToSchedule } from '../parser/mapper.js';
+import { rowsToSchedule, normalizeWeek } from '../parser/mapper.js';
 import { findNowNext } from '../utils/time.js';
 import { LS } from '../config.js';
 
@@ -53,4 +53,24 @@ const before = JSON.stringify(data);
 migrateScheduleBells(data);
 assert.equal(JSON.stringify(data), before);
 assert.equal(defaultBellsConfig().thursday[4].end, '15:00');
+{
+  const cached = { groups: { G: { days: { 1: [{ week: 'odd' }, { week: 'even' }, { week: 'all' }] } } } };
+  migrateWeekColors(cached);
+  assert.equal(cached.groups.G.days[1][0].week, 'green');
+  assert.equal(cached.groups.G.days[1][1].week, 'red');
+  assert.equal(filterByWeek(cached.groups.G.days[1], 'green').length, 2);
+}
+{
+  const fromApi = lessonsFromDaySchedule({ pairs: [{ pair: 1, subject: 'Тест', start: '07:00', end: '07:40' }] }, 2);
+  assert.equal(fromApi[0].start, '07:00');
+  assert.equal(fromApi[0].end, '07:40');
+}
+assert.equal(normalizeWeek('odd'), 'green');
+assert.equal(normalizeWeek('even'), 'red');
+assert.equal(normalizeWeek('неч'), 'green');
+assert.equal(normalizeWeek('чёт'), 'red');
+assert.equal(normalizeWeek('green'), 'green');
+assert.equal(getMelmkWeekType(new Date('2025-12-28T12:00:00')), 'red');
+assert.equal(getMelmkWeekType(new Date('2025-12-29T12:00:00')), 'green');
+assert.equal(getMelmkWeekType(new Date('2026-01-01T12:00:00')), 'green');
 console.log('bells.test.js: OK');

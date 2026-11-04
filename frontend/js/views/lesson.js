@@ -67,8 +67,8 @@ export function renderLessonCard(lesson, opts = {}) {
     badges.appendChild(el('span', `badge badge--${lesson.type}`, TYPE_LABELS[lesson.type] || lesson.type));
   }
   if (lesson.subgroup) badges.appendChild(el('span', 'badge', `Подгр. ${lesson.subgroup}`));
-  if (lesson.week === 'odd') badges.appendChild(el('span', 'badge', 'Нечётная'));
-  if (lesson.week === 'even') badges.appendChild(el('span', 'badge', 'Чётная'));
+  if (lesson.week === 'green') badges.appendChild(el('span', 'badge', 'Зелёная'));
+  if (lesson.week === 'red') badges.appendChild(el('span', 'badge', 'Красная'));
   if (lesson.replaced) badges.appendChild(el('span', 'badge badge--replaced', 'Замена'));
   if (lesson.cancelled) badges.appendChild(el('span', 'badge badge--cancelled', 'Отмена'));
   if (lesson.room) badges.appendChild(el('span', 'badge badge--room', lesson.room));

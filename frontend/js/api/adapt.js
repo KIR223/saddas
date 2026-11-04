@@ -13,7 +13,7 @@ import { loadBellsConfig, saveBellsConfig } from '../models/bells.js';
  * Одна группа из ScheduleOut
  * @param {import('../models/schedule.js').ScheduleData} data
  * @param {{ group: string, week: string, days: Array<{ day: string, pairs: Array<{pair:number,subject:string,teacher:string,room:string}> }> }} schedule
- * @param {{ title?: string, uploaded_at?: string|null }} [info]
+ * @param {{ title?: string, uploaded_at?: string|null, revision?: string|null }} [info]
  */
 export function mergeApiSchedule(data, schedule, info = {}) {
   const name = schedule.group;
@@ -37,21 +37,25 @@ export function mergeApiSchedule(data, schedule, info = {}) {
       const slot = daySlots.find((t) => t.pair === pair) || daySlots[0];
       lessons.push(createLesson({
         pair,
-        start: slot.start,
-        end: slot.end,
+        start: p.start || slot.start,
+        end: p.end || slot.end,
         subject: String(p.subject || '').trim(),
         teacher: String(p.teacher || '').trim(),
         room: String(p.room || '').trim(),
         type: 'other',
         subgroup: null,
-        week: p.week || (schedule.week === 'green' ? 'odd' : schedule.week === 'red' ? 'even' : 'all'),
+        week: p.week || (schedule.week === 'green' || schedule.week === 'red' ? schedule.week : 'all'),
       }));
     }
     data.groups[name].days[dayKey] = lessons;
   }
 
   if (info.title) data.meta.institution = info.title;
-  if (info.uploaded_at) data.updatedAt = info.uploaded_at;
+  const revision = info.revision || info.uploaded_at;
+  if (revision) {
+    data.updatedAt = revision;
+    data.settings.revision = revision;
+  }
   data.meta.sourceFile = 'api';
   data.settings.apiWeek = schedule.week || data.settings.apiWeek || 'current';
   return data;
@@ -68,7 +72,9 @@ export function buildFromApi(groupNames, schedules, info = {}) {
   data.meta.institution = info.title || 'Расписание';
   data.meta.semester = [info.week, info.week_start, info.week_end].filter(Boolean).join(' · ');
   data.meta.sourceFile = 'api';
-  data.updatedAt = info.uploaded_at || new Date().toISOString();
+  const revision = info.revision || info.uploaded_at || '';
+  data.updatedAt = revision || new Date().toISOString();
+  data.settings.revision = revision;
   data.settings.apiWeek = info.week || 'current';
   data.settings.weekStart = info.week_start || '';
   data.settings.weekEnd = info.week_end || '';
@@ -150,8 +156,8 @@ export function lessonsFromDaySchedule(dayOut, dayKey = 1) {
     const slot = daySlots.find((t) => t.pair === pair) || daySlots[0];
     lessons.push(createLesson({
       pair,
-      start: slot.start,
-      end: slot.end,
+      start: p.start || slot.start,
+      end: p.end || slot.end,
       subject: String(p.subject || '').trim(),
       teacher: String(p.teacher || '').trim(),
       room: String(p.room || '').trim(),

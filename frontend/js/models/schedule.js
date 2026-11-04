@@ -6,7 +6,7 @@
 import { moscowNow } from '../utils/time.js';
 
 /** @typedef {'lecture'|'practice'|'lab'|'exam'|'consult'|'other'} LessonType */
-/** @typedef {'all'|'odd'|'even'} WeekParity */
+/** @typedef {'all'|'green'|'red'} WeekParity */
 
 /**
  * @typedef {Object} Lesson
@@ -103,6 +103,19 @@ export function migrateScheduleBells(data) {
   if (sameBellSlots(data.settings?.pairTimes, LEGACY_PAIR_TIMES)) {
     data.settings.pairTimes = DEFAULT_PAIR_TIMES.map((s) => ({ ...s }));
   }
+  return migrateWeekColors(data);
+}
+
+/** Старый кэш odd/even → green/red. */
+export function migrateWeekColors(data) {
+  const map = { odd: 'green', even: 'red' };
+  for (const group of Object.values(data.groups || {})) {
+    for (const lessons of Object.values(group.days || {})) {
+      for (const lesson of lessons) {
+        if (map[lesson.week]) lesson.week = map[lesson.week];
+      }
+    }
+  }
   return data;
 }
 
@@ -170,6 +183,7 @@ export function createEmptySchedule() {
       pairTimes: [...DEFAULT_PAIR_TIMES],
       adminUnlocked: false,
       showWeekends: true,
+      revision: '',
     },
   };
 }
@@ -230,25 +244,13 @@ export function getIsoWeekday(date = moscowNow()) {
 }
 
 /**
- * Номер учебной недели (чётная/нечётная от начала года или даты).
- * Без аргумента — по московскому «сейчас».
- * @param {Date} [date]
- * @returns {'odd'|'even'}
- */
-export function getWeekParity(date = moscowNow()) {
-  const start = new Date(date.getFullYear(), 0, 1);
-  const week = Math.ceil((((date - start) / 86400000) + start.getDay() + 1) / 7);
-  return week % 2 === 0 ? 'even' : 'odd';
-}
-
-/**
- * Фильтр пар по чётности недели
+ * Фильтр пар по цвету недели
  * @param {Lesson[]} lessons
- * @param {'odd'|'even'|'all'} [parity]
+ * @param {'green'|'red'|'all'} [week]
  * @returns {Lesson[]}
  */
-export function filterByWeek(lessons, parity = getWeekParity()) {
-  return lessons.filter((l) => l.week === 'all' || l.week === parity || parity === 'all');
+export function filterByWeek(lessons, week = 'all') {
+  return lessons.filter((l) => l.week === 'all' || l.week === week || week === 'all');
 }
 
 /**
@@ -417,7 +419,7 @@ export function searchLessons(data, query) {
  * Статистика по группе
  * @param {ScheduleData} data
  * @param {string} groupName
- * @param {'odd'|'even'|'all'} [parity]
+ * @param {'green'|'red'|'all'} [parity]
  */
 export function calcStats(data, groupName, parity = 'all') {
   const g = data.groups[groupName];

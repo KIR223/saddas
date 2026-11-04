@@ -91,7 +91,7 @@ export async function fetchCalendarSchedule(group) {
     week: 'all',
     days: templates.flatMap((schedule) => (schedule.days || []).map((day) => ({
       ...day,
-      pairs: day.pairs.map((pair) => ({ ...pair, week: schedule.week === 'green' ? 'odd' : 'even' })),
+      pairs: day.pairs.map((pair) => ({ ...pair, week: schedule.week })),
     }))),
   };
 }
@@ -133,7 +133,10 @@ export async function syncFullFromApi(week = 'current', onProgress) {
  * @param {'current'|'green'|'red'} [week]
  */
 export async function syncBootstrap(preferredGroup = '', week = 'current') {
+  const cached = await loadSchedule().catch(() => null);
   const [info, groupsRes] = await Promise.all([fetchInfo(), fetchGroups()]);
+  const revision = info.revision || info.uploaded_at || '';
+  const stale = Boolean(cached?.settings?.revision && cached.settings.revision !== revision);
   const names = groupsRes.groups || [];
   const group = (preferredGroup && names.includes(preferredGroup))
     ? preferredGroup
@@ -148,6 +151,8 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
     mergeApiSchedule(data, sch, info);
   }
 
+  data.settings.revision = revision;
+  data.settings.snapshotStale = stale;
   await enrichFromApiCatalog(data);
   await saveSchedule(data, { detectChanges: false, keepPrev: true });
   return { data, info, group, groups: names };

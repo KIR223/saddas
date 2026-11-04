@@ -26,7 +26,7 @@ export function renderWeekView(root, data, groupName) {
   }
 
   const pairTimes = data.settings?.pairTimes?.length ? data.settings.pairTimes : DEFAULT_PAIR_TIMES;
-  const parity = getMelmkWeekType() === 'green' ? 'odd' : 'even';
+  const parity = getMelmkWeekType();
   const today = getIsoWeekday();
   const flags = loadFlags();
   const changed = new Set(flags.highlightedIds || []);

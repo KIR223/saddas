@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.catalog import room_names, teacher_names
+from app.catalog import canonicalize_lesson_teacher, canonicalize_room, room_names, teacher_names
 from app.migrations import apply_migrations
 
 # DDL живёт в app/migrations/versions/, не здесь.
@@ -54,7 +54,15 @@ def replace_schedule(lessons, filename: str, title: str) -> None:
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             [
-                (item.group_name, item.day, item.pair, item.week, item.subject, item.teacher, item.room)
+                (
+                    item.group_name,
+                    item.day,
+                    item.pair,
+                    item.week,
+                    item.subject,
+                    canonicalize_lesson_teacher(item.teacher),
+                    canonicalize_room(item.room),
+                )
                 for item in lessons
             ],
         )
@@ -257,7 +265,15 @@ def upsert_pair_override(
                 teacher = excluded.teacher,
                 room = excluded.room
             """,
-            (on_date, group_name, pair, int(cancelled), subject, teacher, room),
+            (
+                on_date,
+                group_name,
+                pair,
+                int(cancelled),
+                subject,
+                canonicalize_lesson_teacher(teacher),
+                canonicalize_room(room),
+            ),
         )
 
 
@@ -290,7 +306,14 @@ def replace_day_overrides(
             VALUES(?, ?, ?, 0, ?, ?, ?)
             """,
             [
-                (on_date, group_name, item["pair"], item["subject"], item["teacher"], item["room"])
+                (
+                    on_date,
+                    group_name,
+                    item["pair"],
+                    item["subject"],
+                    canonicalize_lesson_teacher(item["teacher"]),
+                    canonicalize_room(item["room"]),
+                )
                 for item in pairs
             ],
         )
@@ -315,6 +338,6 @@ def _pair_dict(row) -> dict:
     return {
         "pair": row["pair"],
         "subject": row["subject"],
-        "teacher": row["teacher"],
-        "room": row["room"],
+        "teacher": canonicalize_lesson_teacher(row["teacher"]),
+        "room": canonicalize_room(row["room"]),
     }

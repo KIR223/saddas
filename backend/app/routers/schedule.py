@@ -8,7 +8,7 @@ from app.week import resolve_week
 router = APIRouter(tags=["schedule"])
 
 
-@router.get("/api/schedule", response_model=ScheduleOut)
+@router.get("/api/schedule", response_model=ScheduleOut, response_model_exclude_none=True)
 def schedule(
     group: str = Query(..., description="Код группы, например ТМ-261"),
     week: str = Query("current", description="current, green или red"),

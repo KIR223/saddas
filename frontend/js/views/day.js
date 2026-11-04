@@ -27,8 +27,7 @@ export function renderDayView(root, data, groupName, day, date = dateForIsoWeekd
   const title = el('h2', 'section-title', `${DAY_NAMES[day] || `День ${day}`} · ${date.toLocaleDateString('ru-RU')} · ${weekTypeLabel(getMelmkWeekType(date))} неделя`);
   root.appendChild(title);
 
-  const parity = getMelmkWeekType(date) === 'green' ? 'odd' : 'even';
-  let lessons = filterByWeek(g.days[String(day)] || [], parity);
+  let lessons = filterByWeek(g.days[String(day)] || [], getMelmkWeekType(date));
   lessons = applySubstitutions(lessons, data, groupName, day, date);
   lessons = [...lessons].sort((a, b) => a.pair - b.pair || String(a.subgroup || '').localeCompare(String(b.subgroup || '')));
   lessons = withCurator(lessons, day);

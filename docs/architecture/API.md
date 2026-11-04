@@ -10,7 +10,7 @@
 
 ### `GET /api/info`
 
-Текущий цвет недели, `week_start` / `week_end` (пн–вс), `title`, `uploaded_at`.
+Текущий цвет недели (`green`/`red`), `week_start` / `week_end` (пн–вс) по календарю Москвы, `title`, `uploaded_at`, `revision` (то же значение, что `uploaded_at`, для кэша клиента).
 
 ### `GET /api/groups`
 
@@ -20,11 +20,11 @@
 
 `week`: `current` (по умолчанию), `green`, `red`. 404 если группы нет, 400 если week иной.
 
-Ответ: `{ group, week, days: [{ day, pairs: [{ pair, subject, teacher, room }] }] }`. Дни в порядке `DAY_ORDER` (пн–вс), затем неизвестные имена, если попались. **Overrides не применяются** — только шаблон.
+Ответ: `{ group, week, days: [{ day, pairs: [{ pair, subject, teacher, room }] }], revision }`. Дни в порядке `DAY_ORDER` (пн–вс), затем неизвестные имена, если попались. **Overrides не применяются** — только шаблон. Времени пар нет: у шаблона нет даты.
 
 ### `GET /api/schedule/day?group=&date=`
 
-`date` — `YYYY-MM-DD`. Шаблон дня недели + цвет этой даты + overrides. Поля: `group`, `date`, `day`, `week`, `custom`, `pairs`.
+`date` — `YYYY-MM-DD`. Шаблон дня недели + цвет этой даты (`green`/`red` по ISO-неделе даты) + overrides. Поля: `group`, `date`, `day`, `week`, `custom`, `pairs`, `revision`. У каждой пары `start`/`end` из regular-сетки или short, если дата помечена; нет слота — `null`.
 
 ### `GET /api/rooms`, `GET /api/teachers`
 
