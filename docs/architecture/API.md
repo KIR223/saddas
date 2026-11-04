@@ -1,6 +1,6 @@
 # API
 
-Реализация: `backend/app/main.py`. Живая схема и «Try it out»: `{origin}/docs` (Swagger FastAPI). Отдельного `openapi.json` в репозитории нет.
+Реализация: сборка в `backend/app/main.py`, маршруты в `backend/app/routers/` (`info`, `schedule`, `bells`, `admin`). Живая схема и «Try it out»: `{origin}/docs` (Swagger FastAPI). Отдельного `openapi.json` в репозитории нет.
 
 Клиент: `frontend/js/api/client.js`. База на проде: `https://api.melmksch.fvds.ru`.
 
