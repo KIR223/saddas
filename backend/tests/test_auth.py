@@ -113,3 +113,14 @@ class AuthTest(unittest.TestCase):
         body.update(pair=2,date_from='2026-01-01',date_to='2027-01-01')
         self.assertEqual(self.client.post('/api/admin/overrides/bulk',json=body).status_code,400)
         self.assertEqual(len(self.client.get('/api/admin/overrides?group=ТМ-999').json()['overrides']),16)
+    def test_manual_teacher_survives_import_and_rename_updates_account(self):
+        from app.db import replace_schedule
+        self.client.post('/api/auth/login',json={'login':'owner','password':'test-password-123'})
+        self.assertEqual(self.client.post('/api/admin/catalog/teachers',json={'name':'Иванов И.И.'}).status_code,201)
+        self.client.post('/api/admin/users',json={'login':'teacher','password':'teacher-pass-123','teacher_name':'Иванов И.И.'})
+        replace_schedule([],'x.xlsx','x')
+        self.assertIn('Иванов И.И.',self.client.get('/api/teachers').json()['teachers'])
+        self.assertEqual(self.client.patch('/api/admin/catalog/teachers/Иванов И.И.',json={'name':'Петров П.П.'}).status_code,200)
+        users=self.client.get('/api/admin/users').json()['users']
+        self.assertEqual(next(u for u in users if u['login']=='teacher')['teacher_name'],'Петров П.П.')
+        self.assertEqual(self.client.delete('/api/admin/catalog/teachers/Петров П.П.').status_code,409)

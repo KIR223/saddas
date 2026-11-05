@@ -1,3 +1,4 @@
+import { renderCatalog } from './catalog-editor.js';
 import { renderOverrides } from './overrides-editor.js';
 import { renderServerBells } from './bells-editor.js';
 import { renderImport } from './import.js';
@@ -294,10 +295,10 @@ function renderSection() {
       renderOverrides(content);
       break;
     case 'teachers':
-      renderTeachersEditor(content, editorCtx());
+      renderCatalog(content, 'teachers');
       break;
     case 'rooms':
-      renderRoomsEditor(content, editorCtx());
+      renderCatalog(content, 'rooms');
       break;
     case 'bells':
       renderBellsEditor(content);

@@ -84,9 +84,9 @@ def replace_schedule(lessons, filename: str, title: str, mode: str = "replace", 
                 for item in lessons
             ],
         )
-        conn.execute("DELETE FROM rooms")
+        # Imports merge catalogues; manual names survive.
         # Preserve catalogue identities referenced by accounts.
-        conn.executemany("INSERT INTO rooms(name) VALUES(?)", [(name,) for name in rooms])
+        conn.executemany("INSERT OR IGNORE INTO rooms(name) VALUES(?)", [(name,) for name in rooms])
         conn.executemany("INSERT OR IGNORE INTO teachers(name) VALUES(?)", [(name,) for name in teachers])
         for key, value in (
             ("filename", filename),
