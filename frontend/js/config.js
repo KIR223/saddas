@@ -19,9 +19,7 @@ export const LS = {
   moodBg: 'melmk_mood_bg',
   recentGroups: 'melmk_recent_groups',
   favoriteGroups: 'melmk_favorite_groups',
-  bells: 'melmk_bells_v2',
   curator: 'melmk_curator_v1',
-  audit: 'melmk_audit_v1',
   subDraft: 'melmk_sub_draft_v1',
 };
 
