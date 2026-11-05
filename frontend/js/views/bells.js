@@ -31,7 +31,7 @@ export function renderBellsView(root) {
   }
 
   if(viewDay) {
-    const today=el('section','bells-block');today.append(el('h3','', 'Сегодня — сетка с сервера'));
+    const today=el('section','bells-block');today.append(el('h3','', 'Звонки на сегодня'));
     today.append(renderTimeline(getBellsForDay(viewDay,cfg),getCuratorForDay(viewDay,cfg),{active:true}));root.append(today);
   }
   for (const [dayNumber, title, slots] of [

@@ -101,7 +101,7 @@ async function ensureGroupLoaded(groupName) {
   try {
     state = await syncGroup(state, groupName, apiWeek);
   } catch (e) {
-    toast(e.message || `Не удалось загрузить ${groupName}`, 'error');
+    toast(`Не удалось загрузить расписание группы ${groupName}`, 'error');
   }
 }
 
@@ -189,7 +189,7 @@ async function refreshData() {
       render();
       toast('Не удалось обновить — показаны сохранённые данные', 'warn', 4000);
     } catch {
-      toast(e.message || 'Ошибка обновления', 'error');
+      toast('Не удалось обновить расписание', 'error');
     }
   } finally {
     refreshing = false;
@@ -577,10 +577,10 @@ async function boot() {
     setSyncStatus({error:e.message||'Нет связи'});
     try {
       state = await loadSchedule();
-      toast(`Офлайн-режим: кэш. ${e.message}`, 'warn', 4500);
+
     } catch {
       state = createEmptySchedule();
-      toast(e.message || 'Не удалось загрузить данные', 'error');
+      toast('Не удалось загрузить расписание', 'error');
     }
     currentGroup = (hashGroup && state.groups[hashGroup]) ? hashGroup : '';
     if (!currentGroup) currentGroup=state.settings?.defaultGroup||'';
