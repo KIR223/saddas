@@ -2,7 +2,7 @@ import zipfile
 from io import BytesIO
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from openpyxl.utils.exceptions import InvalidFileException
 
 from app.db import (
@@ -39,6 +39,7 @@ router = APIRouter(tags=["admin"], dependencies=[Depends(require_admin)])
 @router.post("/api/admin/upload", response_model=UploadOut)
 async def upload(
     file: UploadFile = File(..., description="Файл расписания .xlsx"),
+    mode: str = Form("replace"),
 ):
     filename = Path(file.filename or "").name
     if not filename.lower().endswith(".xlsx"):
@@ -57,7 +58,8 @@ async def upload(
             status_code=400,
             detail={"message": "в файле нет занятий", "warnings": result.warnings},
         )
-    replace_schedule(result.lessons, filename, result.title)
+    if mode not in ("replace", "missing"): raise HTTPException(400, "mode: replace или missing")
+    diff = replace_schedule(result.lessons, filename, result.title, mode)
     group_count = len({item.group_name for item in result.lessons})
     return {
         "groups": group_count,
@@ -65,6 +67,7 @@ async def upload(
         "rooms": len(list_rooms()),
         "teachers": len(list_teachers()),
         "warnings": result.warnings,
+        "diff": diff,
     }
 
 

@@ -48,13 +48,18 @@ def init_db() -> None:
         pass
 
 
-def replace_schedule(lessons, filename: str, title: str) -> None:
+def replace_schedule(lessons, filename: str, title: str, mode: str = "replace") -> dict:
     uploaded_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rooms = room_names(item.room for item in lessons)
     teachers = teacher_names(item.teacher for item in lessons)
     with get_conn() as conn:
+        conn.execute('BEGIN IMMEDIATE')
+        existing = {row[0] for row in conn.execute('SELECT code FROM groups')}
+        before = conn.execute('SELECT count(*) FROM lessons').fetchone()[0]
+        incoming = {item.group_name for item in lessons}
+        if mode == 'missing': lessons = [item for item in lessons if item.group_name not in existing]
         conn.executemany("INSERT OR IGNORE INTO groups(code) VALUES(?)", [(g,) for g in sorted({item.group_name for item in lessons})])
-        conn.execute("DELETE FROM lessons")
+        if mode == "replace": conn.execute("DELETE FROM lessons")
         conn.executemany(
             """
             INSERT INTO lessons (group_name, day, pair, week, subject, teacher, room)
@@ -89,6 +94,8 @@ def replace_schedule(lessons, filename: str, title: str) -> None:
                 """,
                 (key, value),
             )
+
+    return {"groups_created":len(incoming-existing), "lessons_created":len(lessons), "lessons_removed":before if mode=='replace' else 0, "mode":mode}
 
 
 def list_groups() -> list[str]:

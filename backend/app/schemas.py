@@ -41,6 +41,7 @@ class UploadOut(BaseModel):
     rooms: int
     teachers: int
     warnings: list[str]
+    diff: dict = Field(default_factory=dict)
 
 
 class RoomsOut(BaseModel):
