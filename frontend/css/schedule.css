@@ -130,11 +130,6 @@
   animation: mm-pulse 1.8s ease-out infinite;
 }
 
-.lesson-card.is-changed {
-  background: var(--changed);
-  border-color: color-mix(in srgb, var(--accent-3) 35%, var(--border));
-}
-
 .lesson-card__time {
   display: flex;
   flex-direction: column;

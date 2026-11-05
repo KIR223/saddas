@@ -8,7 +8,6 @@ import {
 } from '../models/schedule.js';
 import { findNowNext } from '../utils/time.js';
 import { renderWeekLesson } from './lesson.js';
-import { loadFlags } from '../storage/store.js';
 import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.js';
 import { getMelmkWeekType } from '../models/bells.js';
 
@@ -28,8 +27,6 @@ export function renderWeekView(root, data, groupName) {
   const pairTimes = data.settings?.pairTimes?.length ? data.settings.pairTimes : DEFAULT_PAIR_TIMES;
   const parity = getMelmkWeekType();
   const today = getIsoWeekday();
-  const flags = loadFlags();
-  const changed = new Set(flags.highlightedIds || []);
 
   // Текущие пары по дням для подсветки
   const nowIds = new Set();
@@ -75,7 +72,6 @@ export function renderWeekView(root, data, groupName) {
       for (const lesson of lessons) {
         cell.appendChild(renderWeekLesson(lesson, {
           isNow: nowIds.has(lesson.id),
-          isChanged: changed.has(lesson.id) || lesson.replaced,
         }));
       }
       grid.appendChild(cell);

@@ -43,7 +43,6 @@ export function renderLessonCard(lesson, opts = {}) {
   card.setAttribute('role', 'listitem');
   if (opts.isNow) card.classList.add('is-now');
   if (opts.isPast) card.classList.add('is-past');
-  if (lesson.replaced) card.classList.add('is-changed');
   if (lesson.cancelled) card.classList.add('is-cancelled');
   if (lesson.isCurator) card.classList.add('is-curator');
 
@@ -69,20 +68,10 @@ export function renderLessonCard(lesson, opts = {}) {
   if (lesson.subgroup) badges.appendChild(el('span', 'badge', `Подгр. ${lesson.subgroup}`));
   if (lesson.week === 'green') badges.appendChild(el('span', 'badge', 'Зелёная'));
   if (lesson.week === 'red') badges.appendChild(el('span', 'badge', 'Красная'));
-  if (lesson.replaced) badges.appendChild(el('span', 'badge badge--replaced', 'Замена'));
   if (lesson.cancelled) badges.appendChild(el('span', 'badge badge--cancelled', 'Отмена'));
   if (lesson.room) badges.appendChild(el('span', 'badge badge--room', lesson.room));
   if (lesson.teacher) badges.appendChild(el('span', 'badge badge--teacher', lesson.teacher));
   body.appendChild(badges);
-
-  if (lesson.replaced && lesson.original) {
-    const was = el('div', 'lesson-card__was');
-    const parts = [lesson.original.subject, lesson.original.teacher, lesson.original.room]
-      .filter(Boolean)
-      .join(' · ');
-    was.textContent = parts ? `было: ${parts}` : 'было: —';
-    body.appendChild(was);
-  }
 
   const details = el('div', 'lesson-card__details');
   details.hidden = true;
@@ -110,13 +99,11 @@ export function renderWeekLesson(lesson, opts = {}) {
   const style = subjectStyle(lesson.subject);
   const box = el('div', `week-lesson ${style.color}`);
   if (opts.isNow) box.classList.add('is-now');
-  if (lesson.replaced) box.classList.add('is-changed');
   box.appendChild(el('div', 'week-lesson__subj', lesson.subject || '—'));
   box.appendChild(el('div', 'week-lesson__meta', `${lesson.start}–${lesson.end}`));
   const metaParts = [lesson.room, lesson.teacher].filter(Boolean).join(' · ');
   if (metaParts) box.appendChild(el('div', 'week-lesson__meta', metaParts));
   if (lesson.subgroup) box.appendChild(el('div', 'week-lesson__meta', `п/г ${lesson.subgroup}`));
-  if (lesson.replaced) box.appendChild(el('div', 'week-lesson__meta', 'Замена'));
   return box;
 }
 

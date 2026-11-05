@@ -194,9 +194,8 @@ export async function saveSchedule(data, opts = {}) {
       console.warn('IDB save', e);
     }
 
-    if (changedIds.length) {
-      saveFlags({ highlightedIds: changedIds, showUpdateBanner: true });
-    }
+    // Schedule changes are applied silently in the public UI.
+    saveFlags({ highlightedIds: [], showUpdateBanner: false });
 
     notify(data);
     return { ok: true, changedIds };

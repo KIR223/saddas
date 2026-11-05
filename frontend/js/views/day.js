@@ -6,7 +6,6 @@ import { el, clear } from '../utils/dom.js';
 import { filterByWeek, DAY_NAMES, getIsoWeekday } from '../models/schedule.js';
 import { findNowNext, toMinutes, nowMinutes } from '../utils/time.js';
 import { renderLessonCard } from './lesson.js';
-import { loadFlags } from '../storage/store.js';
 import { withCurator, getMelmkWeekType, weekTypeLabel } from '../models/bells.js';
 import { applySubstitutions, dateForIsoWeekday } from '../models/substitutions.js';
 
@@ -42,8 +41,6 @@ export function renderDayView(root, data, groupName, day, date = dateForIsoWeekd
 
   const today = date.toDateString() === dateForIsoWeekday(getIsoWeekday()).toDateString();
   const { current } = today ? findNowNext(lessons) : { current: null };
-  const flags = loadFlags();
-  const changed = new Set(flags.highlightedIds || []);
   const nm = nowMinutes();
 
   const list = el('div', 'lesson-list');
@@ -54,7 +51,6 @@ export function renderDayView(root, data, groupName, day, date = dateForIsoWeekd
     const isPast = today && toMinutes(lesson.end) <= nm;
     const card = renderLessonCard(lesson, {
       isNow: current && (current.id === lesson.id || (current.isCurator && lesson.isCurator)),
-      isChanged: changed.has(lesson.id),
       isPast,
     });
     card.style.animationDelay = `${i * 50}ms`;

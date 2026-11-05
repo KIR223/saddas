@@ -1,4 +1,4 @@
-import { mountSyncStatus, setSyncStatus, syncStatus } from './utils/sync-status.js';
+import { mountSyncStatus, setSyncStatus } from './utils/sync-status.js';
 import { allSnapshots } from './storage/api-snapshot.js';
 import { installBellState } from './models/bell-state.js';
 import { setServerDay } from './models/substitutions.js';
@@ -12,7 +12,7 @@ import { initTheme, toggleLightDark, syncModeButton } from './utils/theme.js';
 import { toast } from './utils/toast.js';
 import { el, clear, setText } from './utils/dom.js';
 import {
-  loadSchedule, saveSchedule, hasSchedule, loadFlags, saveFlags, subscribe,
+  loadSchedule, saveSchedule, hasSchedule, subscribe,
 } from './storage/store.js';
 import { listGroups, getIsoWeekday, DAY_SHORT, createEmptySchedule, filterByWeek } from './models/schedule.js';
 import { parseHashGroup, setHashGroup, clearHashGroup } from './utils/share.js';
@@ -178,15 +178,11 @@ async function refreshData() {
     toast('Обновление…', 'info', 1500);
     // Keep resolved days if refresh fails; later GETs replace them atomically.
     dayHydrateKey = '';
-    const { data, changedIds } = await syncFullFromApi(apiWeek);
+    const { data } = await syncFullFromApi(apiWeek);
     state = data;
     prefetchStarted = true;
     if (currentGroup && !state.groups[currentGroup]) currentGroup = '';
-    if (changedIds?.length) {
-      saveFlags({ highlightedIds: changedIds, showUpdateBanner: true });
-    }
     render();
-    toast(syncStatus().cached ? 'Сеть недоступна — сохранённые данные сохранены' : 'Расписание обновлено', syncStatus().cached ? 'warn' : 'success');
   } catch (e) {
     try {
       state = await loadSchedule();
@@ -225,22 +221,6 @@ async function selectGroup(g) {
 
 function clearGroup() {
   selectGroup('');
-}
-
-function renderUpdateBanner(mount) {
-  const flags = loadFlags();
-  if (!flags.showUpdateBanner) return;
-  const banner = el('div', 'update-banner no-print');
-  banner.setAttribute('role', 'status');
-  banner.appendChild(el('p', 'banner__text', 'Расписание обновлено — изменённые пары подсвечены'));
-  const ok = el('button', 'btn btn--primary', 'Понятно');
-  ok.type = 'button';
-  ok.addEventListener('click', () => {
-    saveFlags({ showUpdateBanner: false });
-    banner.remove();
-  });
-  banner.appendChild(ok);
-  mount.prepend(banner);
 }
 
 function renderModeSwitch(mount) {
@@ -291,10 +271,6 @@ function renderHome(content) {
     content.querySelectorAll('.empty-state__actions .btn--outline, .empty-state__actions .btn--ghost').forEach((b) => b.remove());
     return;
   }
-
-  const banners = el('div');
-  content.appendChild(banners);
-  renderUpdateBanner(banners);
 
   // Выбор группы — всегда первым
   const pickerMount = el('div', 'home-picker no-print');

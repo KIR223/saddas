@@ -19,8 +19,10 @@ for(const render of [renderLessonCard,renderWeekLesson]){
   const ordinary=render({...lesson,replaced:false},{isChanged:true});
   assert.equal(ordinary.classList.contains('is-changed'),false);
   assert.ok(!text(ordinary).includes('Замена'));
-  const replaced=render({...lesson,replaced:true},{isChanged:false});
-  assert.equal(replaced.classList.contains('is-changed'),true);
-  assert.ok(text(replaced).includes('Замена'));
+  const replaced=render({...lesson,replaced:true,original:{...lesson,subject:'Прежний предмет'}},{isChanged:false});
+  assert.equal(replaced.classList.contains('is-changed'),false);
+  assert.ok(!text(replaced).includes('Замена'));
+  assert.ok(text(replaced).includes('Физика'));
+  assert.ok(!text(replaced).includes('было:'));
 }
-console.log('only actual replacements receive replacement styling: OK');
+console.log('schedule changes render silently: OK');

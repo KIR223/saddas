@@ -121,14 +121,6 @@
   box-shadow: var(--shadow-glow);
 }
 
-.week-lesson.is-changed {
-  background: var(--changed);
-}
-
-.week-lesson.is-changed::before {
-  background: var(--accent-3);
-}
-
 .week-lesson__subj {
   font-weight: 800;
   letter-spacing: -0.02em;
