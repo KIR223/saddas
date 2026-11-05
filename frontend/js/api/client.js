@@ -34,6 +34,7 @@ export async function request(path, init = {}) {
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),8000);
   let res;
   try {
+    if(cacheable && globalThis.navigator?.onLine===false)throw new Error('офлайн');
     res = await fetch(url, {
       ...init,
       signal: init.signal || controller.signal,
@@ -48,6 +49,7 @@ export async function request(path, init = {}) {
     clearTimeout(timeout);
     const saved=cacheable ? await readSnapshot(path) : null;
     if(saved){globalThis.dispatchEvent?.(new CustomEvent('api-cache',{detail:{path,at:saved.at}}));return saved.data;}
+    globalThis.dispatchEvent?.(new CustomEvent('api-error',{detail:{message:e.message||'Нет связи'}}));
     throw new Error(`Нет связи с API (${url}): ${e.message || e}`);
   }
 
@@ -70,9 +72,10 @@ export async function request(path, init = {}) {
       : Array.isArray(detail)
         ? detail.map((d) => d.msg || JSON.stringify(d)).join('; ')
         : (data?.message || text || res.statusText);
+    globalThis.dispatchEvent?.(new CustomEvent('api-error',{detail:{message:msg||`HTTP ${res.status}`}}));
     throw new Error(msg || `HTTP ${res.status}`);
   }
-  if(cacheable)await writeSnapshot(path,data);
+  if(cacheable){const saved=await writeSnapshot(path,data);globalThis.dispatchEvent?.(new CustomEvent('api-success',{detail:{path,at:saved?.at}}));}
   return data;
 }
 

@@ -1,3 +1,4 @@
+import { mountSyncStatus, setSyncStatus, syncStatus } from './utils/sync-status.js';
 import { allSnapshots } from './storage/api-snapshot.js';
 import { installBellState } from './models/bell-state.js';
 import { setServerDay } from './models/substitutions.js';
@@ -169,6 +170,7 @@ async function hydrateDayOverrides() {
 async function refreshData() {
   if (refreshing) return;
   refreshing = true;
+  setSyncStatus({cached:false,error:null});
   const btn = document.getElementById('btn-refresh');
   btn?.classList.add('is-loading');
   btn?.setAttribute('disabled', 'true');
@@ -184,7 +186,7 @@ async function refreshData() {
       saveFlags({ highlightedIds: changedIds, showUpdateBanner: true });
     }
     render();
-    toast('Расписание обновлено', 'success');
+    toast(syncStatus().cached ? 'Сеть недоступна — сохранённые данные сохранены' : 'Расписание обновлено', syncStatus().cached ? 'warn' : 'success');
   } catch (e) {
     try {
       state = await loadSchedule();
@@ -551,6 +553,7 @@ function setupKeyboardNav() {
 
 async function boot() {
   initTheme();
+  mountSyncStatus();
   initPwa(document.getElementById('banner-slot') || document.getElementById('main'));
   setupNav();
   setupHeader();
@@ -567,6 +570,7 @@ async function boot() {
 
   // Paint the persisted snapshot before making any network request.
   state=await loadSchedule();
+  if(state.settings?.syncedAt)setSyncStatus({lastAt:state.settings.syncedAt});
   if(state.settings?.bellsSnapshot)installBellState(state.settings.bellsSnapshot);
   for(const entry of await allSnapshots()){
     if(entry.path.startsWith('/api/bells/config'))installBellState(entry.data);
@@ -594,6 +598,7 @@ async function boot() {
     startPrefetch();
   } catch (e) {
     console.warn(e);
+    setSyncStatus({error:e.message||'Нет связи'});
     try {
       state = await loadSchedule();
       toast(`Офлайн-режим: кэш. ${e.message}`, 'warn', 4500);

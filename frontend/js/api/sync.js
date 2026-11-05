@@ -1,3 +1,4 @@
+import { readSnapshot } from '../storage/api-snapshot.js';
 /**
  * Синхронизация с бэкендом (контракт docs/openapi.json)
  */
@@ -161,7 +162,7 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
   data.settings.revision = revision;
   data.settings.snapshotStale = stale;
   await enrichFromApiCatalog(data);
-  data.settings.syncedAt = new Date().toISOString();
+  data.settings.syncedAt = (await readSnapshot('/api/info'))?.at || cached?.settings?.syncedAt;
   await saveSchedule(data, { detectChanges: false, keepPrev: true });
   return { data, info, group, groups: names };
 }
