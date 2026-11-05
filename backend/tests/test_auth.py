@@ -103,3 +103,13 @@ class AuthTest(unittest.TestCase):
         self.assertEqual(out['pairs'][0]['start'],'10:00');self.assertIsNone(out['curator'])
         cfg['regular']=[{'pair':1,'start':'10:00','end':'11:00'},{'pair':2,'start':'10:30','end':'11:30'}]
         self.assertEqual(self.client.put('/api/admin/bell-config',json=cfg).status_code,400)
+    def test_bulk_16_weeks_and_rejected_range_has_no_partial_writes(self):
+        self.client.post('/api/auth/login',json={'login':'owner','password':'test-password-123'})
+        self.client.post('/api/admin/groups',json={'code':'ТМ-999'})
+        body={'group':'ТМ-999','pair':1,'weekday':1,'subject':'Физика'}
+        out=self.client.post('/api/admin/overrides/bulk',json=body)
+        self.assertEqual(out.status_code,200,out.text);self.assertEqual(out.json()['count'],16)
+        self.assertEqual(len(self.client.get('/api/admin/overrides?group=ТМ-999').json()['overrides']),16)
+        body.update(pair=2,date_from='2026-01-01',date_to='2027-01-01')
+        self.assertEqual(self.client.post('/api/admin/overrides/bulk',json=body).status_code,400)
+        self.assertEqual(len(self.client.get('/api/admin/overrides?group=ТМ-999').json()['overrides']),16)

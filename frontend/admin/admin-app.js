@@ -1,3 +1,4 @@
+import { renderOverrides } from './overrides-editor.js';
 import { renderServerBells } from './bells-editor.js';
 import { renderImport } from './import.js';
 import { renderTemplate } from './template.js';
@@ -290,7 +291,7 @@ function renderSection() {
       renderTemplate(content);
       break;
     case 'subs':
-      renderSubstitutions(content);
+      renderOverrides(content);
       break;
     case 'teachers':
       renderTeachersEditor(content, editorCtx());
