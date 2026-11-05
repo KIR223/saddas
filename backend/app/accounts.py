@@ -31,7 +31,7 @@ def public_user(row) -> dict:
 
 
 def create_user(login, password, role='teacher', teacher_name=None):
-    login = login.strip()
+    login = login.strip().casefold()
     if not login or len(login) > 80 or role not in ('admin', 'teacher'):
         raise ValueError('некорректный логин или роль')
     encoded = hash_password(password)
@@ -42,6 +42,9 @@ def create_user(login, password, role='teacher', teacher_name=None):
             raise ValueError('нужна привязка преподавателя')
         row = conn.execute('INSERT INTO users(login,password_hash,role,teacher_name) VALUES(?,?,?,?) RETURNING *',
                            (login, encoded, role, teacher_name)).fetchone()
+        from app.audit import context
+        actor=context.get()
+        if actor: context.set((*actor[:3],actor[3]+f"#user={row['id']}:{row['login']}"))
         return public_user(row)
 
 
@@ -54,4 +57,4 @@ def bootstrap_admin():
         if not login or not password:
             return  # No implicit development account. Mutations remain closed.
         conn.execute('INSERT INTO users(login,password_hash,role) VALUES(?,?,?)',
-                     (login.strip(), hash_password(password), 'admin'))
+                     (login.strip().casefold(), hash_password(password), 'admin'))

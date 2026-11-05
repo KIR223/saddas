@@ -14,4 +14,6 @@ assert.equal(publicPath('/api/auth/me'),false);
 globalThis.fetch=async()=>new Response(JSON.stringify({detail:'failure'}),{status:500});
 assert.deepEqual(await request(path),data);
 assert.deepEqual((await readSnapshot(path)).data,data);
+globalThis.fetch=async()=>new Response('<html>proxy error</html>',{status:200});
+assert.deepEqual(await request(path),data);
 console.log('offline response survives network and server failures: OK');

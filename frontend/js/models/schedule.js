@@ -87,23 +87,8 @@ export function sameBellSlots(a, b) {
 
 /** Обновить только старые стандартные времена, сохраняя ручные изменения. */
 export function migrateScheduleBells(data) {
-  for (const group of Object.values(data.groups || {})) {
-    for (const [day, lessons] of Object.entries(group.days || {})) {
-      const legacy = [1, 4].includes(Number(day)) ? PAIR_TIMES_MON_THU : LEGACY_PAIR_TIMES;
-      const slots = getPairTimesForDay(day);
-      for (const lesson of lessons) {
-        const previous = legacy.find((s) => s.pair === lesson.pair);
-        const slot = slots.find((s) => s.pair === lesson.pair);
-        if (previous && slot && lesson.start === previous.start && lesson.end === previous.end) {
-          lesson.start = slot.start;
-          lesson.end = slot.end;
-        }
-      }
-    }
-  }
-  if (sameBellSlots(data.settings?.pairTimes, LEGACY_PAIR_TIMES)) {
-    data.settings.pairTimes = DEFAULT_PAIR_TIMES.map((s) => ({ ...s }));
-  }
+  // Preserve the server's exact cached times, including shortened dates.
+  data.substitutions=[];
   return migrateWeekColors(data);
 }
 

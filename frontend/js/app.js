@@ -280,13 +280,13 @@ function renderHome(content) {
   if (!hasSchedule(state)) {
     renderEmptyState(content, {
       onDemo: () => refreshData(),
-      onUpload: () => toast('Загрузка Excel — в админке /admin', 'info', 3000),
+      onUpload: () => refreshData(),
     });
     const title = content.querySelector('.empty-state__title');
     const text = content.querySelector('.empty-state__text');
     const demoBtn = content.querySelector('.empty-state__actions .btn--primary');
     if (title) title.textContent = 'Расписание пока пусто';
-    if (text) text.textContent = 'Нажмите «Обновить» в шапке или загрузите данные в админке.';
+    if (text) text.textContent = 'Расписание ещё не опубликовано. Попробуйте обновить позже.';
     if (demoBtn) demoBtn.textContent = 'Обновить данные';
     content.querySelectorAll('.empty-state__actions .btn--outline, .empty-state__actions .btn--ghost').forEach((b) => b.remove());
     return;

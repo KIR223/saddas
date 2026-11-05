@@ -1,3 +1,4 @@
+import { bellState } from './bell-state.js';
 /**
  * Замены пар с датами действия.
  * Источник правды для публичной страницы — серверные day-overrides (кэш ниже).
@@ -123,65 +124,10 @@ export function applySubstitutions(lessons, data, group, day, date = null) {
     return fromServer.map((l) => ({ ...l }));
   }
 
-  const dayKey = String(day);
-  const subs = (data.substitutions || []).filter(
-    (s) => s.group === group && String(s.day) === dayKey && isSubActive(s, when)
-  );
-  if (!subs.length) return lessons.map((l) => ({ ...l }));
-
-  const byPair = new Map(subs.map((s) => [s.pair, s]));
-  const out = [];
-
-  for (const lesson of lessons) {
-    const sub = byPair.get(lesson.pair);
-    if (!sub) {
-      out.push(lesson);
-      continue;
-    }
-    byPair.delete(lesson.pair);
-    if (sub.cancelled) {
-      out.push({
-        ...lesson,
-        subject: 'Пара отменена',
-        teacher: '',
-        room: '',
-        replaced: true,
-        cancelled: true,
-        original: cloneData(lesson),
-        comment: sub.comment || '',
-      });
-      continue;
-    }
-    const merged = createLesson({
-      ...lesson,
-      ...sub.lesson,
-      id: lesson.id,
-      pair: lesson.pair,
-      start: sub.lesson?.start || lesson.start,
-      end: sub.lesson?.end || lesson.end,
-      replaced: true,
-      original: cloneData(lesson),
-    });
-    if (sub.comment) merged.comment = sub.comment;
-    out.push(merged);
-  }
-
-  // Замены на пустые слоты (добавление)
-  for (const [, sub] of byPair) {
-    if (sub.cancelled) continue;
-    const slots = getPairTimesForDay(day);
-    const slot = slots.find((s) => s.pair === sub.pair) || {start:'',end:''};
-    out.push(createLesson({
-      ...(sub.lesson || {}),
-      pair: sub.pair,
-      start: sub.lesson?.start || slot.start,
-      end: sub.lesson?.end || slot.end,
-      replaced: true,
-      original: null,
-    }));
-  }
-
-  return out.sort((a, b) => a.pair - b.pair);
+  // Legacy browser-only substitutions are never authoritative.
+  const cfg=bellState();
+  const slots=cfg.exceptions?.[dateKey] ?? (dayNum===1?cfg.monThu:dayNum===4?cfg.thursday:cfg.regular);
+  return lessons.map(l=>{const slot=slots?.find(s=>s.pair===l.pair);return {...l,start:slot?.start??l.start,end:slot?.end??l.end};});
 }
 
 /**

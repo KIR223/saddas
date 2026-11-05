@@ -126,9 +126,9 @@ def day_payload(group: str, on: date) -> dict:
 
 def schedule_payload(group: str, week: str, rows) -> dict:
     by_day: dict[str, list[dict]] = {}
+    from app.bell_config import configuration
+    cfg = configuration()
     for row in rows:
-        from app.bell_config import configuration
-        cfg = configuration()
         kind = 'monThu' if row['day'] == DAY_ORDER[0] else 'thursday' if row['day'] == DAY_ORDER[3] else 'regular'
         slot = next((s for s in cfg[kind] if s['pair']==row['pair']), {})
         by_day.setdefault(row["day"], []).append({**_pair_fields(row), 'start':slot.get('start'), 'end':slot.get('end')})

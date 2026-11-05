@@ -1,4 +1,4 @@
-import { readSnapshot, writeSnapshot, publicPath } from '../storage/api-snapshot.js';
+import { readSnapshot, writeSnapshot, publicPath, validSnapshot } from '../storage/api-snapshot.js';
 /**
  * HTTP-клиент к API расписания (контракт: docs/openapi.json)
  * База: https://api.melmksch.fvds.ru
@@ -74,6 +74,11 @@ export async function request(path, init = {}) {
         : (data?.message || text || res.statusText);
     globalThis.dispatchEvent?.(new CustomEvent('api-error',{detail:{message:msg||`HTTP ${res.status}`}}));
     throw new Error(msg || `HTTP ${res.status}`);
+  }
+  if(cacheable && !validSnapshot(path,data)){
+    const saved=await readSnapshot(path);
+    if(saved){globalThis.dispatchEvent?.(new CustomEvent('api-cache',{detail:{path,at:saved.at}}));return saved.data;}
+    throw new Error('Сервер вернул неполные данные');
   }
   if(cacheable){const saved=await writeSnapshot(path,data);globalThis.dispatchEvent?.(new CustomEvent('api-success',{detail:{path,at:saved?.at}}));}
   return data;
