@@ -47,3 +47,18 @@ class AuthTest(unittest.TestCase):
         self.assertEqual(self.client.patch(f'/api/admin/users/{uid}',json={'status':'disabled'}).status_code,200)
         self.client.post('/api/auth/logout')
         self.assertEqual(self.client.post('/api/auth/login',json={'login':'teacher','password':'teacher-pass-123'}).status_code,401)
+    def test_teacher_sees_only_own_resolved_pairs(self):
+        from app.accounts import create_user
+        from app.db import upsert_pair_override
+        with get_conn() as c:
+            c.execute("INSERT INTO teachers VALUES('Иванов И.И.')")
+            c.execute("INSERT INTO lessons(group_name,day,pair,week,subject,teacher,room) VALUES('ТМ-1','Понедельник',1,'green','Физика','Иванов И.И.','1')")
+        create_user('teacher','teacher-pass-123',teacher_name='Иванов И.И.')
+        self.client.post('/api/auth/login',json={'login':'teacher','password':'teacher-pass-123'})
+        upsert_pair_override('ТМ-1','2026-11-02',2,False,'Математика','Иванов И.И.','2')
+        r=self.client.get('/api/teacher/schedule?date=2026-11-02')
+        self.assertEqual(r.status_code,200,r.text)
+        self.assertIn(2,[p['pair'] for p in r.json()['days'][0]['pairs']])
+        upsert_pair_override('ТМ-1','2026-11-02',2,False,'Математика','Петров П.П.','2')
+        self.assertNotIn(2,[p['pair'] for p in self.client.get('/api/teacher/schedule?date=2026-11-02').json()['days'][0]['pairs']])
+        self.assertEqual(self.client.put('/api/admin/bells',json={'pairs':[]}).status_code,403)

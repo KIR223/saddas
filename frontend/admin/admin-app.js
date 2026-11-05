@@ -4,7 +4,7 @@ import { renderUsers } from './users.js';
  */
 
 import {
-  tryLogin, isLoggedIn, logout, touchSession, getAuthLockStatus, refreshSession,
+  tryLogin, isLoggedIn, logout, touchSession, getAuthLockStatus, refreshSession, getCurrentUser,
 } from '../js/utils/auth.js';
 import { initTheme, toggleTheme, syncModeButton, setMode } from '../js/utils/theme.js';
 import { loadSchedule, saveSchedule } from '../js/storage/store.js';
@@ -1331,6 +1331,7 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   document.getElementById('login-pass').value = '';
+  if (res.user.role === 'teacher') { location.replace('/teacher/'); return; }
   await showApp();
   toast('Добро пожаловать', 'success');
 });
@@ -1350,6 +1351,7 @@ bindActivity();
 wireNav();
 
 await refreshSession();
+if (getCurrentUser()?.role === "teacher") location.replace("/teacher/");
 if (isLoggedIn()) {
   showApp().then(() => setSection(parseHashSection()));
 } else {
