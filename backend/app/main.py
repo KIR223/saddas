@@ -28,6 +28,8 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
+    from app.accounts import bootstrap_admin
+    bootstrap_admin()
     yield
 
 

@@ -84,7 +84,7 @@ class MigrationsTest(unittest.TestCase):
         conn = connect(migrate=False)
         try:
             self.assertTrue(APP_TABLES.issubset(table_names(conn)))
-            self.assertEqual(current_version(conn), 1)
+            self.assertEqual(current_version(conn), len(available_migrations()))
             self.assertEqual(list_applied(conn)[0][1], "001_initial.sql")
         finally:
             conn.close()
@@ -106,18 +106,18 @@ class MigrationsTest(unittest.TestCase):
             raw.close()
 
         first = apply_migrations(connect(migrate=False))
-        self.assertEqual(first, [1])
+        self.assertEqual(first, [v for v, _ in available_migrations()])
         with get_conn() as conn:
             row = conn.execute("SELECT subject FROM lessons").fetchone()
             self.assertEqual(row["subject"], "Физика")
-            self.assertEqual(current_version(conn), 1)
+            self.assertEqual(current_version(conn), len(available_migrations()))
             self.assertIn("schema_migrations", table_names(conn))
 
         second = apply_migrations(connect(migrate=False))
         self.assertEqual(second, [])
         with get_conn() as conn:
             self.assertEqual(conn.execute("SELECT COUNT(*) AS n FROM lessons").fetchone()["n"], 1)
-            self.assertEqual(current_version(conn), 1)
+            self.assertEqual(current_version(conn), len(available_migrations()))
 
     def test_cli_is_idempotent(self):
         env = {**os.environ, "DATABASE_PATH": db_path()}
@@ -137,13 +137,13 @@ class MigrationsTest(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertIn("применены [1]", first.stdout)
-        self.assertIn("уже на версии 1", second.stdout)
+        self.assertIn("применены", first.stdout)
+        self.assertIn(f"уже на версии {len(available_migrations())}", second.stdout)
         self.assertEqual(second.returncode, 0)
 
     def test_versions_are_numbered_files(self):
         versions = available_migrations()
-        self.assertEqual([item[0] for item in versions], [1])
+        self.assertEqual([item[0] for item in versions], list(range(1,len(versions)+1)))
         self.assertEqual(versions[0][1].name, "001_initial.sql")
 
     def test_db_module_does_not_embed_ddl(self):

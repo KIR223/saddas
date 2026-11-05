@@ -19,6 +19,7 @@ def connect(*, migrate: bool = True) -> sqlite3.Connection:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys=ON")
     if migrate:
         apply_migrations(conn)
     return conn
@@ -67,9 +68,9 @@ def replace_schedule(lessons, filename: str, title: str) -> None:
             ],
         )
         conn.execute("DELETE FROM rooms")
-        conn.execute("DELETE FROM teachers")
+        # Preserve catalogue identities referenced by accounts.
         conn.executemany("INSERT INTO rooms(name) VALUES(?)", [(name,) for name in rooms])
-        conn.executemany("INSERT INTO teachers(name) VALUES(?)", [(name,) for name in teachers])
+        conn.executemany("INSERT OR IGNORE INTO teachers(name) VALUES(?)", [(name,) for name in teachers])
         for key, value in (
             ("filename", filename),
             ("uploaded_at", uploaded_at),
