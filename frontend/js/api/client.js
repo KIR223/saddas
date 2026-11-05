@@ -122,9 +122,17 @@ export function fetchBells(date = null) {
  * @param {File} file
  * @param {string} [token]
  */
-export async function uploadScheduleFile(file, token = getAdminToken()) {
+export async function uploadScheduleFile(file, token = getAdminToken(), options = null) {
+  if (!options) {
+    const counts = await request('/api/admin/import-info');
+    const choice = prompt(`Замен на сервере: ${counts.overrides_total}, сегодня и позже: ${counts.overrides_future}. Выберите: keep — оставить все, future — снять с сегодняшнего дня, all — снять все.`);
+    if (!['keep','future','all'].includes(choice)) throw new Error('Импорт отменён: выберите действие с заменами');
+    options = {mode:'replace', overrides_policy:choice};
+  }
   const body = new FormData();
   body.append('file', file, file.name);
+  body.append('mode',options.mode);
+  body.append('overrides_policy',options.overrides_policy);
   return request('/api/admin/upload', {
     method: 'POST',
     headers: adminHeaders(token),

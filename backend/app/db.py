@@ -48,12 +48,18 @@ def init_db() -> None:
         pass
 
 
-def replace_schedule(lessons, filename: str, title: str, mode: str = "replace") -> dict:
+def replace_schedule(lessons, filename: str, title: str, mode: str = "replace", overrides_policy: str = "keep") -> dict:
     uploaded_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rooms = room_names(item.room for item in lessons)
     teachers = teacher_names(item.teacher for item in lessons)
     with get_conn() as conn:
         conn.execute('BEGIN IMMEDIATE')
+        from app.week import moscow_today
+        today = moscow_today().isoformat()
+        overrides_before = conn.execute('SELECT count(*) FROM lesson_overrides').fetchone()[0]
+        if overrides_policy == 'all': conn.execute('DELETE FROM lesson_overrides')
+        elif overrides_policy == 'future': conn.execute('DELETE FROM lesson_overrides WHERE on_date>=?', (today,))
+        overrides_after = conn.execute('SELECT count(*) FROM lesson_overrides').fetchone()[0]
         existing = {row[0] for row in conn.execute('SELECT code FROM groups')}
         before = conn.execute('SELECT count(*) FROM lessons').fetchone()[0]
         incoming = {item.group_name for item in lessons}
@@ -95,7 +101,7 @@ def replace_schedule(lessons, filename: str, title: str, mode: str = "replace") 
                 (key, value),
             )
 
-    return {"groups_created":len(incoming-existing), "lessons_created":len(lessons), "lessons_removed":before if mode=='replace' else 0, "mode":mode}
+    return {"groups_created":len(incoming-existing), "lessons_created":len(lessons), "lessons_removed":before if mode=='replace' else 0, "mode":mode, "overrides_policy":overrides_policy, "overrides_before":overrides_before, "overrides_removed":overrides_before-overrides_after, "overrides_remaining":overrides_after}
 
 
 def list_groups() -> list[str]:

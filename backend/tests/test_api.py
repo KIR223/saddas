@@ -51,6 +51,7 @@ class ApiTest(unittest.TestCase):
 
         denied = self.client.post(
             "/api/admin/upload",
+            data={"overrides_policy":"keep"},
             files={"file": ("schedule.xlsx", build_upload(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         self.assertEqual(denied.status_code, 401)
@@ -58,6 +59,7 @@ class ApiTest(unittest.TestCase):
         uploaded = self.client.post(
             "/api/admin/upload",
             headers=self.auth(),
+            data={"overrides_policy":"keep"},
             files={"file": ("schedule.xlsx", build_upload(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         self.assertEqual(uploaded.status_code, 200, uploaded.text)
@@ -111,6 +113,7 @@ class ApiTest(unittest.TestCase):
         response = self.client.post(
             "/api/admin/upload",
             headers=self.auth(),
+            data={"overrides_policy":"keep"},
             files={"file": ("schedule.xlsx", build_upload(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         self.assertEqual(response.status_code, 200, response.text)
@@ -275,6 +278,7 @@ class ApiTest(unittest.TestCase):
         uploaded = self.client.post(
             "/api/admin/upload",
             headers=self.auth(),
+            data={"overrides_policy":"keep"},
             files={"file": ("schedule.xlsx", buffer.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         self.assertEqual(uploaded.status_code, 200, uploaded.text)

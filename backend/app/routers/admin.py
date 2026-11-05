@@ -40,6 +40,7 @@ router = APIRouter(tags=["admin"], dependencies=[Depends(require_admin)])
 async def upload(
     file: UploadFile = File(..., description="Файл расписания .xlsx"),
     mode: str = Form("replace"),
+    overrides_policy: str = Form(...),
 ):
     filename = Path(file.filename or "").name
     if not filename.lower().endswith(".xlsx"):
@@ -59,7 +60,8 @@ async def upload(
             detail={"message": "в файле нет занятий", "warnings": result.warnings},
         )
     if mode not in ("replace", "missing"): raise HTTPException(400, "mode: replace или missing")
-    diff = replace_schedule(result.lessons, filename, result.title, mode)
+    if overrides_policy not in ("keep", "future", "all"): raise HTTPException(400, "выберите политику замен: keep, future, all")
+    diff = replace_schedule(result.lessons, filename, result.title, mode, overrides_policy)
     group_count = len({item.group_name for item in result.lessons})
     return {
         "groups": group_count,
@@ -171,3 +173,13 @@ def remove_day_override(
     group = require_group(group)
     on = parse_iso_date(on_date)
     delete_day_overrides(group, on.isoformat())
+
+
+@router.get('/api/admin/import-info')
+def import_info():
+    from app.db import get_conn
+    from app.week import moscow_today
+    with get_conn() as c:
+        total=c.execute('SELECT count(*) FROM lesson_overrides').fetchone()[0]
+        future=c.execute('SELECT count(*) FROM lesson_overrides WHERE on_date>=?',(moscow_today().isoformat(),)).fetchone()[0]
+    return {'overrides_total':total,'overrides_future':future}
