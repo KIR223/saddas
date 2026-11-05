@@ -53,6 +53,7 @@ class AuthTest(unittest.TestCase):
         with get_conn() as c:
             c.execute("INSERT INTO teachers VALUES('Иванов И.И.')")
             c.execute("INSERT INTO lessons(group_name,day,pair,week,subject,teacher,room) VALUES('ТМ-1','Понедельник',1,'green','Физика','Иванов И.И.','1')")
+        with get_conn() as c: c.execute("INSERT OR IGNORE INTO groups(code) VALUES('ТМ-1')")
         create_user('teacher','teacher-pass-123',teacher_name='Иванов И.И.')
         self.client.post('/api/auth/login',json={'login':'teacher','password':'teacher-pass-123'})
         upsert_pair_override('ТМ-1','2026-11-02',2,False,'Математика','Иванов И.И.','2')
@@ -75,3 +76,10 @@ class AuthTest(unittest.TestCase):
         events=self.client.get('/api/admin/audit').json()['events']
         self.assertTrue(any(e['entity'].startswith('/api/admin/users') and e['actor_login']=='owner' for e in events))
         self.assertNotIn('another-pass-123',str(events))
+    def test_empty_group_is_public_and_archive_hides_it(self):
+        self.client.post('/api/auth/login',json={'login':'owner','password':'test-password-123'})
+        self.assertEqual(self.client.post('/api/admin/groups',json={'code':'ТМ-999'}).status_code,201)
+        self.assertIn('ТМ-999',self.client.get('/api/groups').json()['groups'])
+        self.assertEqual(self.client.get('/api/schedule/day?group=ТМ-999&date=2026-11-02').json()['pairs'],[])
+        self.client.patch('/api/admin/groups/ТМ-999',json={'active':False})
+        self.assertNotIn('ТМ-999',self.client.get('/api/groups').json()['groups'])

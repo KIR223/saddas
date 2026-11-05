@@ -53,6 +53,7 @@ def replace_schedule(lessons, filename: str, title: str) -> None:
     rooms = room_names(item.room for item in lessons)
     teachers = teacher_names(item.teacher for item in lessons)
     with get_conn() as conn:
+        conn.executemany("INSERT OR IGNORE INTO groups(code) VALUES(?)", [(g,) for g in sorted({item.group_name for item in lessons})])
         conn.execute("DELETE FROM lessons")
         conn.executemany(
             """
@@ -93,7 +94,7 @@ def replace_schedule(lessons, filename: str, title: str) -> None:
 def list_groups() -> list[str]:
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT DISTINCT group_name FROM lessons ORDER BY group_name"
+            "SELECT code AS group_name FROM groups WHERE active=1 ORDER BY code"
         ).fetchall()
     return [row["group_name"] for row in rows]
 

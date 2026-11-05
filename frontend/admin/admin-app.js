@@ -1,3 +1,4 @@
+import { renderGroups } from './groups.js';
 import { renderAudit } from './audit.js';
 import { renderUsers } from './users.js';
 /**
@@ -42,6 +43,7 @@ let scheduleData = null;
 let section = 'home';
 
 const SECTION_TITLES = {
+  groups: 'Группы',
   audit: 'Журнал сервера',
   users: 'Пользователи',
   home: 'Главная',
@@ -277,6 +279,7 @@ function renderSection() {
   ensureCatalog(scheduleData);
   clear(content);
   switch (section) {
+    case 'groups': renderGroups(content); break;
     case 'audit': renderAudit(content); break;
     case 'users': renderUsers(content); break;
     case 'home':
