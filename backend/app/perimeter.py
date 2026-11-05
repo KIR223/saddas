@@ -5,8 +5,14 @@ from fastapi.responses import JSONResponse
 from app.db import get_conn
 
 
+# The deployed frontend is a different origin from api.melmksch.fvds.ru.
+# Keep this exact allowlist in sync with both Compose entry points.
+DEFAULT_ORIGINS = 'https://melmksch.fvds.ru,http://localhost:8080,http://127.0.0.1:8080'
+
+
 def origins():
-    return [v.strip().rstrip('/') for v in os.getenv('ALLOWED_ORIGINS','http://localhost:8080,http://127.0.0.1:8080').split(',') if v.strip()]
+    configured = os.getenv('ALLOWED_ORIGINS') or DEFAULT_ORIGINS
+    return [v.strip().rstrip('/') for v in configured.split(',') if v.strip()]
 
 
 def validate_environment():

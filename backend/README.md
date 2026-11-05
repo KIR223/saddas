@@ -16,7 +16,7 @@ FastAPI + SQLite; интерфейс находится в `../frontend`. Пуб
 | BOOTSTRAP_ADMIN_LOGIN | нет | Логин первого администратора |
 | BOOTSTRAP_ADMIN_PASSWORD | нет | Пароль 12–256 символов; не хранить в Git |
 | APP_ENV | development | production включает проверку настроек |
-| ALLOWED_ORIGINS | localhost:8080, 127.0.0.1:8080 (HTTP) | Точные origin интерфейса через запятую |
+| ALLOWED_ORIGINS | https://melmksch.fvds.ru и локальные HTTP origin | Точные origin интерфейса через запятую |
 | COOKIE_SECURE | true | На production обязательно true; false только для локального HTTP |
 
 Bootstrap выполняется только при пустой users и не меняет существующие пароли. После создания первого admin bootstrap-пароль можно удалить из env. Без пользователей изменения закрыты. ADMIN_TOKEN и X-Admin-Token не дают доступа.
