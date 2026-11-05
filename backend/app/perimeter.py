@@ -34,4 +34,17 @@ async def guard(request: Request, call_next):
                 if row['failures']>=30: return JSONResponse({'detail':'слишком много запросов'},status_code=429,headers={'Retry-After':str(row['locked_until']-now)})
                 c.execute('UPDATE login_attempts SET failures=failures+1 WHERE key=?',(key,))
             else: c.execute('INSERT OR REPLACE INTO login_attempts VALUES(?,1,?)',(key,now+300))
-    return await call_next(request)
+    from app.audit import context
+    from app.security import current_user
+    from fastapi import HTTPException
+    token=None
+    if request.url.path.startswith('/api/admin/') and request.method not in ('GET','HEAD','OPTIONS'):
+        try:
+            user=current_user(request)
+            token=context.set((user['id'],user['login'],request.method,str(request.url.path)+'?'+str(request.url.query)))
+        except HTTPException:
+            pass
+    try:
+        return await call_next(request)
+    finally:
+        if token is not None: context.reset(token)

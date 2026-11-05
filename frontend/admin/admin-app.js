@@ -1,3 +1,4 @@
+import { renderAudit } from './audit.js';
 import { renderUsers } from './users.js';
 /**
  * Панель администратора МелМК — точка входа
@@ -41,6 +42,7 @@ let scheduleData = null;
 let section = 'home';
 
 const SECTION_TITLES = {
+  audit: 'Журнал сервера',
   users: 'Пользователи',
   home: 'Главная',
   schedule: 'Расписание',
@@ -275,6 +277,7 @@ function renderSection() {
   ensureCatalog(scheduleData);
   clear(content);
   switch (section) {
+    case 'audit': renderAudit(content); break;
     case 'users': renderUsers(content); break;
     case 'home':
       renderHome(content);

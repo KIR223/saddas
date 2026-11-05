@@ -1,0 +1,8 @@
+CREATE TABLE audit_events (
+ id INTEGER PRIMARY KEY,
+ actor_id INTEGER NOT NULL,
+ actor_login TEXT NOT NULL,
+ at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ action TEXT NOT NULL,
+ entity TEXT NOT NULL
+);

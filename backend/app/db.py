@@ -29,7 +29,12 @@ def connect(*, migrate: bool = True) -> sqlite3.Connection:
 def get_conn():
     conn = connect()
     try:
+        baseline = conn.total_changes
         yield conn
+        from app.audit import context
+        actor = context.get()
+        if actor and conn.total_changes > baseline:
+            conn.execute('INSERT INTO audit_events(actor_id,actor_login,action,entity) VALUES(?,?,?,?)', actor)
         conn.commit()
     except Exception:
         conn.rollback()

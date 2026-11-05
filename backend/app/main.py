@@ -49,6 +49,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from app.audit import router as audit_router
+app.include_router(audit_router)
 from app.perimeter import guard
 app.middleware("http")(guard)
 app.include_router(teacher.router)

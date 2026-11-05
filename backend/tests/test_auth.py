@@ -68,3 +68,10 @@ class AuthTest(unittest.TestCase):
         from app.perimeter import validate_environment
         with patch.dict(os.environ,APP_ENV='production',ALLOWED_ORIGINS='https://college.example',ADMIN_TOKEN='dev',COOKIE_SECURE='true'):
             with self.assertRaises(RuntimeError): validate_environment()
+    def test_audit_survives_new_session_without_passwords(self):
+        self.client.post('/api/auth/login',json={'login':'owner','password':'test-password-123'})
+        r=self.client.post('/api/admin/users',json={'login':'second','password':'another-pass-123','role':'admin'})
+        self.assertEqual(r.status_code,201)
+        events=self.client.get('/api/admin/audit').json()['events']
+        self.assertTrue(any(e['entity'].startswith('/api/admin/users') and e['actor_login']=='owner' for e in events))
+        self.assertNotIn('another-pass-123',str(events))
