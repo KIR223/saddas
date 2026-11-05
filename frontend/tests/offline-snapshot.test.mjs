@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { request } from '../js/api/client.js';
+import { readSnapshot, publicPath } from '../js/storage/api-snapshot.js';
+const path='/api/schedule/day?group=G&date=2026-11-05';
+const data={group:'G',date:'2026-11-05',pairs:[{pair:1,subject:'Замена',start:'10:00',end:'10:40'}],revision:'r1'};
+globalThis.fetch=async()=>new Response(JSON.stringify(data),{status:200});
+assert.deepEqual(await request(path),data);
+globalThis.fetch=async()=>{throw new Error('offline');};
+assert.deepEqual(await request(path),data);
+assert.equal((await readSnapshot(path)).data.pairs[0].subject,'Замена');
+await assert.rejects(request('/api/admin/users'),/Нет связи/);
+assert.equal(publicPath('/api/teacher/schedule'),false);
+assert.equal(publicPath('/api/auth/me'),false);
+globalThis.fetch=async()=>new Response(JSON.stringify({detail:'failure'}),{status:500});
+assert.deepEqual(await request(path),data);
+assert.deepEqual((await readSnapshot(path)).data,data);
+console.log('offline response survives network and server failures: OK');

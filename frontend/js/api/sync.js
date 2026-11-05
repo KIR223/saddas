@@ -122,6 +122,8 @@ export async function syncFullFromApi(week = 'current', onProgress) {
   });
 
   const data = buildFromApi(names, schedules.filter(Boolean), info);
+  const saved=await loadSchedule().catch(()=>null);
+  for(let i=0;i<names.length;i++)if(!schedules[i] && saved?.groups?.[names[i]])data.groups[names[i]]=saved.groups[names[i]];
   data.settings.apiWeek = week === 'current' ? (info.week || 'current') : week;
   await enrichFromApiCatalog(data);
   const prev = await loadSchedule().catch(() => null);
@@ -145,6 +147,9 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
     : '';
 
   const data = buildFromApi(names, [], info);
+  // Keep successfully downloaded groups while refreshing the index.
+  for(const name of names)if(cached?.groups?.[name])data.groups[name]=cached.groups[name];
+  if(cached?.settings?.bellsSnapshot)data.settings.bellsSnapshot=cached.settings.bellsSnapshot;
   data.settings.apiWeek = week === 'current' ? (info.week || week) : week;
   data.settings.defaultGroup = group;
 
@@ -156,6 +161,7 @@ export async function syncBootstrap(preferredGroup = '', week = 'current') {
   data.settings.revision = revision;
   data.settings.snapshotStale = stale;
   await enrichFromApiCatalog(data);
+  data.settings.syncedAt = new Date().toISOString();
   await saveSchedule(data, { detectChanges: false, keepPrev: true });
   return { data, info, group, groups: names };
 }

@@ -1,3 +1,7 @@
+import { allSnapshots } from './storage/api-snapshot.js';
+import { installBellState } from './models/bell-state.js';
+import { setServerDay } from './models/substitutions.js';
+import { mergeDayScheduleOut } from './api/overrides.js';
 /**
  * МелМК — точка входа. Данные: API (кэш) + локальное хранилище.
  * Группа при входе НЕ выбирается автоматически.
@@ -127,7 +131,7 @@ async function hydrateDayOverrides() {
     }
   } else if (scheduleMode === 'week') {
     for (let d = 1; d <= 6; d++) {
-      dates.push({ day: d, key: dateKeyForIsoWeekday(d) });
+      dates.push({ day: d, key: dateKeyForIsoWeekday(d, selectedDate) });
     }
   } else {
     const last = new Date(monthYear, monthIndex + 1, 0).getDate();
@@ -170,7 +174,7 @@ async function refreshData() {
   btn?.setAttribute('disabled', 'true');
   try {
     toast('Обновление…', 'info', 1500);
-    clearServerDayCache();
+    // Keep resolved days if refresh fails; later GETs replace them atomically.
     dayHydrateKey = '';
     const { data, changedIds } = await syncFullFromApi(apiWeek);
     state = data;
@@ -561,12 +565,25 @@ async function boot() {
     main.appendChild(el('p', 'now-widget__meta', 'Загрузка…'));
   }
 
+  // Paint the persisted snapshot before making any network request.
+  state=await loadSchedule();
+  if(state.settings?.bellsSnapshot)installBellState(state.settings.bellsSnapshot);
+  for(const entry of await allSnapshots()){
+    if(entry.path.startsWith('/api/bells/config'))installBellState(entry.data);
+    if(entry.path.startsWith('/api/schedule/day?')){
+      const out=entry.data,day=getIsoWeekday(new Date(`${out.date}T12:00:00`));
+      setServerDay(out.group,out.date,mergeDayScheduleOut(out,[],day),day);
+    }
+  }
+  currentGroup=(hashGroup && state.groups[hashGroup])?hashGroup:(state.settings?.defaultGroup||'');
+  if(!state.groups[currentGroup])currentGroup='';
+  render();
   try {
     // Не передаём preferred group — bootstrap без автовыбора
-    const bootRes = await syncBootstrap('', apiWeek);
+    const bootRes = await syncBootstrap(currentGroup, apiWeek);
     state = bootRes.data;
     // При входе группа НЕ выбирается (даже если API вернул первую)
-    currentGroup = '';
+    currentGroup = bootRes.group || '';
     if (hashGroup && state.groups[hashGroup]) {
       // Прямая ссылка #group=… — уважаем, но это не «автовыбор при заходе»
       currentGroup = hashGroup;
@@ -585,6 +602,7 @@ async function boot() {
       toast(e.message || 'Не удалось загрузить данные', 'error');
     }
     currentGroup = (hashGroup && state.groups[hashGroup]) ? hashGroup : '';
+    if (!currentGroup) currentGroup=state.settings?.defaultGroup||'';
     if (!currentGroup) clearHashGroup();
   }
 

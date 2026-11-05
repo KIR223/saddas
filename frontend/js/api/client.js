@@ -1,3 +1,4 @@
+import { readSnapshot, writeSnapshot, publicPath } from '../storage/api-snapshot.js';
 /**
  * HTTP-клиент к API расписания (контракт: docs/openapi.json)
  * База: https://api.melmksch.fvds.ru
@@ -29,10 +30,13 @@ function adminHeaders(token = getAdminToken()) {
  */
 export async function request(path, init = {}) {
   const url = `${base()}${path.startsWith('/') ? path : `/${path}`}`;
+  const cacheable=(!init.method || init.method==='GET') && publicPath(path);
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),8000);
   let res;
   try {
     res = await fetch(url, {
       ...init,
+      signal: init.signal || controller.signal,
       cache: 'no-store',
       credentials: 'include',
       headers: {
@@ -41,9 +45,13 @@ export async function request(path, init = {}) {
       },
     });
   } catch (e) {
+    clearTimeout(timeout);
+    const saved=cacheable ? await readSnapshot(path) : null;
+    if(saved){globalThis.dispatchEvent?.(new CustomEvent('api-cache',{detail:{path,at:saved.at}}));return saved.data;}
     throw new Error(`Нет связи с API (${url}): ${e.message || e}`);
   }
 
+  clearTimeout(timeout);
   if (res.status === 204) return null;
 
   const text = await res.text();
@@ -55,6 +63,7 @@ export async function request(path, init = {}) {
   }
 
   if (!res.ok) {
+    if(cacheable && res.status>=500){const saved=await readSnapshot(path);if(saved){globalThis.dispatchEvent?.(new CustomEvent('api-cache',{detail:{path,at:saved.at}}));return saved.data;}}
     const detail = data?.detail;
     const msg = typeof detail === 'string'
       ? detail
@@ -63,6 +72,7 @@ export async function request(path, init = {}) {
         : (data?.message || text || res.statusText);
     throw new Error(msg || `HTTP ${res.status}`);
   }
+  if(cacheable)await writeSnapshot(path,data);
   return data;
 }
 
