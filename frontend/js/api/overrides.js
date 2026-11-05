@@ -9,7 +9,7 @@ import {
 } from './client.js';
 import { getAdminToken } from './config.js';
 import { toDateKey, setServerDay } from '../models/substitutions.js';
-import { createLesson, getPairTimesForDay, getIsoWeekday } from '../models/schedule.js';
+import { createLesson, getIsoWeekday } from '../models/schedule.js';
 import { moscowNow } from '../utils/time.js';
 
 /**
@@ -150,25 +150,29 @@ export async function removeSubstitutionFromApi(sub, token = getAdminToken()) {
  * @param {number} [dayKey]
  */
 export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
-  const slots = getPairTimesForDay(dayKey);
-  const baseByPair = new Map(baseLessons.map((l) => [l.pair, l]));
+  const sameContent = (a, b) => ['subject','teacher','room'].every(key => String(a[key] || '').trim() === String(b[key] || '').trim());
+  const baseByPair = new Map();
+  for(const lesson of baseLessons){
+    const candidates=baseByPair.get(lesson.pair)||[];
+    candidates.push(lesson);baseByPair.set(lesson.pair,candidates);
+  }
   const out = [];
 
   for (const p of dayOut?.pairs || []) {
     const pair = Number(p.pair) || 0;
     if (!pair) continue;
-    const base = baseByPair.get(pair);
-    const slot = slots.find((s) => s.pair === pair) || {start:'',end:''};
+    const candidates = baseByPair.get(pair) || [];
+    const base = candidates.find(lesson => sameContent(lesson, p)) || candidates[0];
     const subject = String(p.subject || '').trim();
     const teacher = String(p.teacher || '').trim();
     const room = String(p.room || '').trim();
     const cancelled = p.cancelled === true || /отмен/i.test(subject) || subject === '';
     if (cancelled) continue;
-    // custom относится ко всему дню, включая отменённые и отсутствующие пары.
-    // Для оставшихся пар сравниваем их собственные данные с шаблоном.
-    const changed = base
-      ? base.subject !== subject || base.teacher !== teacher || base.room !== room
-      : !!dayOut?.custom;
+    // Only the server knows whether a dated override exists. Never infer a
+    // replacement from a stale/different-week template or an unknown cached base.
+    const changed = typeof p.replaced === 'boolean'
+      ? p.replaced
+      : dayOut?.custom === true && baseLessons.length > 0 && (!base || !sameContent(base, p));
 
     out.push(createLesson({
       ...(base || {}),
@@ -181,7 +185,7 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
       id: base?.id,
       replaced: changed,
       cancelled: cancelled || undefined,
-      original: changed && base ? { ...base } : undefined,
+      original: changed ? (p.original ? { ...(base || {}), ...p.original } : base ? { ...base } : undefined) : undefined,
     }));
   }
 

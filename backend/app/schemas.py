@@ -15,6 +15,8 @@ class GroupsOut(BaseModel):
 
 
 class PairOut(BaseModel):
+    replaced: bool = False
+    original: dict | None = None
     pair: int
     subject: str
     teacher: str

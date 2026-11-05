@@ -230,6 +230,14 @@ def resolve_day(group_name: str, day: str, week: str, on_date: str) -> tuple[lis
             (group_name, on_date),
         ).fetchall()
     by_pair = {row["pair"]: row for row in overrides}
+
+    def resolved_override(change):
+        value = _pair_dict(change)
+        originals = [_pair_dict(row) for row in template if row['pair'] == change['pair']]
+        replaced = value not in originals
+        return {**value, 'replaced': replaced,
+                'original': originals[0] if replaced and originals else None}
+
     pairs: list[dict] = []
     applied: set[int] = set()
     for row in template:
@@ -241,13 +249,13 @@ def resolve_day(group_name: str, day: str, week: str, on_date: str) -> tuple[lis
             change = by_pair[pair]
             if change["cancelled"]:
                 continue
-            pairs.append(_pair_dict(change))
+            pairs.append(resolved_override(change))
             continue
-        pairs.append(_pair_dict(row))
+        pairs.append({**_pair_dict(row), "replaced": False, "original": None})
     for pair, change in by_pair.items():
         if pair in applied or change["cancelled"]:
             continue
-        pairs.append(_pair_dict(change))
+        pairs.append(resolved_override(change))
     pairs.sort(key=lambda item: item["pair"])
     return pairs, bool(overrides)
 
