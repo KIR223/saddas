@@ -83,3 +83,13 @@ class AuthTest(unittest.TestCase):
         self.assertEqual(self.client.get('/api/schedule/day?group=ТМ-999&date=2026-11-02').json()['pairs'],[])
         self.client.patch('/api/admin/groups/ТМ-999',json={'active':False})
         self.assertNotIn('ТМ-999',self.client.get('/api/groups').json()['groups'])
+    def test_manual_template_visible_and_separate_from_overrides(self):
+        self.client.post('/api/auth/login',json={'login':'owner','password':'test-password-123'})
+        self.client.post('/api/admin/groups',json={'code':'ТМ-999'})
+        week=self.client.get('/api/info').json()['week']
+        q=f'/api/admin/template?group=ТМ-999&day=1&week={week}'
+        r=self.client.put(q,json={'pairs':[{'pair':1,'subject':'Физика','teacher':'Иванов И.И.','room':'307'}]})
+        self.assertEqual(r.status_code,200,r.text)
+        self.assertEqual(self.client.get('/api/schedule?group=ТМ-999&week='+week).json()['days'][0]['pairs'][0]['subject'],'Физика')
+        with get_conn() as c: self.assertEqual(c.execute('SELECT count(*) FROM lesson_overrides').fetchone()[0],0)
+        self.assertTrue(self.client.get('/api/info').json()['revision'])

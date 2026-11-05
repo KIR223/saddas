@@ -1,3 +1,4 @@
+import { renderTemplate } from './template.js';
 import { renderGroups } from './groups.js';
 import { renderAudit } from './audit.js';
 import { renderUsers } from './users.js';
@@ -286,7 +287,7 @@ function renderSection() {
       renderHome(content);
       break;
     case 'schedule':
-      renderScheduleEditor(content, editorCtx());
+      renderTemplate(content);
       break;
     case 'subs':
       renderSubstitutions(content);

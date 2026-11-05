@@ -78,7 +78,7 @@ def bells_payload(kind: str, pairs: list[dict], on_date: str | None = None) -> d
 
 def snapshot_revision(meta: dict[str, str] | None = None) -> str | None:
     data = meta if meta is not None else get_meta()
-    return data.get("uploaded_at")
+    return data.get("revision") or data.get("uploaded_at")
 
 
 def day_names(on: date) -> tuple[str, str]:

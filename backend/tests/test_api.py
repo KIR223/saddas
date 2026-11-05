@@ -90,7 +90,7 @@ class ApiTest(unittest.TestCase):
         info_after = self.client.get("/api/info").json()
         self.assertIn("Расписание занятий", info_after["title"])
         self.assertIsNotNone(info_after["uploaded_at"])
-        self.assertEqual(info_after["revision"], info_after["uploaded_at"])
+        self.assertTrue(info_after["revision"])
         self.assertEqual(schedule.json()["revision"], info_after["revision"])
 
         self.assertEqual(self.client.get("/api/rooms").json(), {"rooms": ["307"]})

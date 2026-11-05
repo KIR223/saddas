@@ -1,0 +1,25 @@
+-- Revision changes with every server-owned schedule mutation.
+CREATE TRIGGER revision_lessons_insert AFTER INSERT ON lessons BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_lessons_update AFTER UPDATE ON lessons BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_lessons_delete AFTER DELETE ON lessons BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_groups_insert AFTER INSERT ON groups BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_groups_update AFTER UPDATE ON groups BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_groups_delete AFTER DELETE ON groups BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_lesson_overrides_insert AFTER INSERT ON lesson_overrides BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_lesson_overrides_update AFTER UPDATE ON lesson_overrides BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_lesson_overrides_delete AFTER DELETE ON lesson_overrides BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_rooms_insert AFTER INSERT ON rooms BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_rooms_update AFTER UPDATE ON rooms BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_rooms_delete AFTER DELETE ON rooms BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_teachers_insert AFTER INSERT ON teachers BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_teachers_update AFTER UPDATE ON teachers BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_teachers_delete AFTER DELETE ON teachers BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_regular_insert AFTER INSERT ON bell_regular BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_regular_update AFTER UPDATE ON bell_regular BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_regular_delete AFTER DELETE ON bell_regular BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_short_dates_insert AFTER INSERT ON bell_short_dates BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_short_dates_update AFTER UPDATE ON bell_short_dates BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_short_dates_delete AFTER DELETE ON bell_short_dates BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_short_days_insert AFTER INSERT ON bell_short_days BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_short_days_update AFTER UPDATE ON bell_short_days BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
+CREATE TRIGGER revision_bell_short_days_delete AFTER DELETE ON bell_short_days BEGIN INSERT INTO meta(key,value) VALUES('revision',lower(hex(randomblob(16)))) ON CONFLICT(key) DO UPDATE SET value=excluded.value; END;
