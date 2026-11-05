@@ -13,21 +13,19 @@ let deferredPrompt = null;
  */
 export function initPwa(mount) {
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
+    const register = async () => {
       try {
-        const reg = await navigator.serviceWorker.register('./sw.js?v=20');
-        // Принудительно подтянуть новую версию (иначе телефон держит старый UI)
-        reg.update().catch(() => {});
-        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (sessionStorage.getItem('melmk_sw_reloaded')) return;
-          sessionStorage.setItem('melmk_sw_reloaded', '1');
-          location.reload();
-        });
-      } catch (e) {
-        console.warn('SW', e);
-      }
-    });
+        const reg=await navigator.serviceWorker.register('/sw.js',{scope:'/'});
+        const offerUpdate=()=>{
+          if(!reg.waiting || mount.querySelector('.sw-update'))return;
+          const button=document.createElement('button');button.className='btn sw-update';button.textContent='Доступна новая версия — обновить';
+          button.onclick=()=>{navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});reg.waiting.postMessage({type:'SKIP_WAITING'});};mount.prepend(button);
+        };
+        offerUpdate();reg.addEventListener('updatefound',()=>{reg.installing?.addEventListener('statechange',offerUpdate);});
+        reg.update().catch(()=>{});
+      }catch(e){console.warn('SW',e);}
+    };
+    if(document.readyState==='complete')register();else window.addEventListener('load',register,{once:true});
   }
 
   window.addEventListener('beforeinstallprompt', (e) => {
