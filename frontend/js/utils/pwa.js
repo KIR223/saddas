@@ -28,7 +28,9 @@ export function initPwa(mount) {
     if(document.readyState==='complete')register();else window.addEventListener('load',register,{once:true});
   }
 
-  window.addEventListener('beforeinstallprompt', (e) => {
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(ios && !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches && !loadFlags().installDismissed)renderInstallBanner(mount);
+  window.addEventListener('beforeinstallprompt' , (e) => {
     e.preventDefault();
     deferredPrompt = e;
     const flags = loadFlags();
@@ -56,7 +58,7 @@ function renderInstallBanner(mount) {
 
   const text = document.createElement('p');
   text.className = 'banner__text';
-  text.textContent = 'Установите расписание на экран — работает офлайн';
+  text.textContent = 'Добавьте расписание на экран Домой. После загрузки группы оно доступно офлайн.';
 
   const installBtn = document.createElement('button');
   installBtn.type = 'button';
@@ -64,7 +66,7 @@ function renderInstallBanner(mount) {
   installBtn.textContent = 'Установить на экран';
   installBtn.addEventListener('click', async () => {
     if (!deferredPrompt) {
-      toast('Установка недоступна в этом браузере. Добавьте через меню «На экран Домой».', 'info', 4500);
+      toast('На iPhone: откройте сайт в Safari → «Поделиться» → «На экран Домой» → «Добавить».', 'info', 8000);
       return;
     }
     deferredPrompt.prompt();

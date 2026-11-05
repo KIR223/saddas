@@ -2,14 +2,20 @@
   "name": "МелМК — Расписание",
   "short_name": "МелМК",
   "description": "Расписание МелМК: день, звонки, поиск, офлайн PWA",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f4f2fb",
   "theme_color": "#5b4dff",
   "lang": "ru",
   "icons": [
+    {
+      "src": "./icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "./icons/icon-192.png",
       "sizes": "192x192",
@@ -34,5 +40,6 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ]
+  ],
+  "id": "/"
 }
