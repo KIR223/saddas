@@ -57,7 +57,7 @@ class ApiTest(unittest.TestCase):
 
         uploaded = self.client.post(
             "/api/admin/upload",
-            headers={"X-Admin-Token": "secret"},
+            headers=self.auth(),
             files={"file": ("schedule.xlsx", build_upload(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         self.assertEqual(uploaded.status_code, 200, uploaded.text)
@@ -97,7 +97,15 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(self.client.get("/api/teachers").json(), {"teachers": ["Курницкая Т.С."]})
 
     def auth(self):
-        return {"X-Admin-Token": "secret"}
+        import hashlib, time
+        from app.db import get_conn
+        from app.accounts import create_user
+        with get_conn() as c:
+            row=c.execute("SELECT id FROM users WHERE login='test-admin'").fetchone()
+        user = {'id': row['id']} if row else create_user('test-admin', 'test-password-123', 'admin')
+        with get_conn() as c:
+            c.execute('INSERT OR REPLACE INTO sessions VALUES(?,?,?)', (hashlib.sha256(b'test-session').hexdigest(), user['id'], int(time.time())+3600))
+        return {"Cookie": "schedule_session=test-session"}
 
     def upload_default(self):
         response = self.client.post(

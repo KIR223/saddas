@@ -3,7 +3,7 @@
  */
 
 import {
-  tryLogin, isLoggedIn, logout, touchSession, getAuthLockStatus,
+  tryLogin, isLoggedIn, logout, touchSession, getAuthLockStatus, refreshSession,
 } from '../js/utils/auth.js';
 import { initTheme, toggleTheme, syncModeButton, setMode } from '../js/utils/theme.js';
 import { loadSchedule, saveSchedule } from '../js/storage/store.js';
@@ -1099,28 +1099,7 @@ function renderData(root) {
   const sec = el('section', 'adm-section');
   sec.appendChild(el('h2', 'adm-section__title', 'Расписание и импорт'));
 
-  const tokenCard = el('div', 'adm-card');
-  tokenCard.appendChild(el('h3', 'adm-card__title', 'Токен API (БД)'));
-  tokenCard.appendChild(el('p', 'adm-muted', `Сервер: ${apiOrigin()}. Без токена замены остаются только в браузере.`));
-  const tokenField = el('div', 'field');
-  const tokenLabel = el('label', '', 'x-admin-token');
-  tokenLabel.htmlFor = 'adm-api-token';
-  const tokenInput = document.createElement('input');
-  tokenInput.id = 'adm-api-token';
-  tokenInput.type = 'password';
-  tokenInput.autocomplete = 'off';
-  tokenInput.placeholder = 'Токен с сервера';
-  tokenInput.value = getAdminToken();
-  tokenField.append(tokenLabel, tokenInput);
-  const tokenSave = el('button', 'btn btn--primary btn--block', 'Сохранить токен');
-  tokenSave.type = 'button';
-  tokenSave.addEventListener('click', () => {
-    setAdminToken(tokenInput.value.trim());
-    toast(tokenInput.value.trim() ? 'Токен сохранён' : 'Токен очищен', 'success');
-    renderSection();
-  });
-  tokenCard.append(tokenField, tokenSave);
-  sec.appendChild(tokenCard);
+
 
   const imp = el('div', 'adm-card');
   imp.appendChild(el('h3', 'adm-card__title', 'Excel'));
@@ -1367,6 +1346,7 @@ initAdminTheme();
 bindActivity();
 wireNav();
 
+await refreshSession();
 if (isLoggedIn()) {
   showApp().then(() => setSection(parseHashSection()));
 } else {

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db
 from app.http import UTF8JSONResponse
-from app.routers import admin, bells, info, schedule
+from app.routers import admin, bells, info, schedule, auth
 
 
 def load_dotenv(path: str = ".env") -> None:
@@ -46,6 +46,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(auth.router)
 app.include_router(info.router)
 app.include_router(schedule.router)
 app.include_router(bells.router)

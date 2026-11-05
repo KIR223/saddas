@@ -19,7 +19,7 @@ function base() {
 function adminHeaders(token = getAdminToken()) {
   /** @type {Record<string, string>} */
   const headers = {};
-  if (token) headers['x-admin-token'] = token;
+  // Authentication is an HttpOnly server cookie.
   return headers;
 }
 
@@ -27,13 +27,14 @@ function adminHeaders(token = getAdminToken()) {
  * @param {string} path
  * @param {RequestInit} [init]
  */
-async function request(path, init = {}) {
+export async function request(path, init = {}) {
   const url = `${base()}${path.startsWith('/') ? path : `/${path}`}`;
   let res;
   try {
     res = await fetch(url, {
       ...init,
       cache: 'no-store',
+      credentials: 'include',
       headers: {
         Accept: 'application/json',
         ...(init.headers || {}),
@@ -250,3 +251,7 @@ export function removePairOverride(onDate, pair, group, token = getAdminToken())
   );
 }
 
+
+export const login = (login, password) => request("/api/auth/login", {method:"POST", headers:{"Content-Type":"application/json"},body:JSON.stringify({login,password})});
+export const me = () => request("/api/auth/me");
+export const endSession = () => request("/api/auth/logout", {method:"POST"});

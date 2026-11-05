@@ -4,7 +4,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      ADMIN_TOKEN: ${ADMIN_TOKEN:-dev}
+      BOOTSTRAP_ADMIN_LOGIN: ${BOOTSTRAP_ADMIN_LOGIN:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
       DATABASE_PATH: /app/data/schedule.db
     volumes:
       - ./data:/app/data

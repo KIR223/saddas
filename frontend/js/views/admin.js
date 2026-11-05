@@ -26,35 +26,7 @@ export function renderAdmin(root, ctx) {
   root.appendChild(el('h2', 'section-title', 'Админ'));
   root.appendChild(el('p', 'now-widget__meta', `API: ${apiOrigin()}`));
 
-  // Токен
-  const tokenSection = el('section', 'stats-panel');
-  tokenSection.appendChild(el('h3', 'section-title', 'Токен администратора'));
-  const field = el('div', 'field');
-  const label = el('label', '', 'x-admin-token');
-  label.htmlFor = 'admin-token';
-  const input = document.createElement('input');
-  input.id = 'admin-token';
-  input.type = 'password';
-  input.autocomplete = 'off';
-  input.placeholder = 'Токен с сервера';
-  input.value = getAdminToken();
-  field.append(label, input);
-
-  const saveBtn = el('button', 'btn btn--primary btn--block', 'Сохранить токен');
-  saveBtn.type = 'button';
-  saveBtn.addEventListener('click', () => {
-    setAdminToken(input.value.trim());
-    data.settings.adminUnlocked = !!input.value.trim();
-    saveSchedule(data, { detectChanges: false, keepPrev: false });
-    toast(input.value.trim() ? 'Токен сохранён' : 'Токен очищен', 'success');
-    renderAdmin(root, ctx);
-  });
-  tokenSection.append(field, saveBtn);
-  root.appendChild(tokenSection);
-
-  if (!getAdminToken()) {
-    root.appendChild(el('p', 'now-widget__meta', 'Без токена можно смотреть расписание; загрузка Excel на сервер недоступна.'));
-  }
+  root.appendChild(el('p', 'now-widget__meta', 'Для изменений войдите в /admin/ с серверной учётной записью.'));
 
   // Загрузка на API
   const uploadSection = el('section', 'stats-panel');

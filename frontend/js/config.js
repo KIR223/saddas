@@ -1,6 +1,6 @@
 /**
  * Конфиг МелМК (фронтенд-only)
- * Пароль админки НЕ хранится в открытом виде — только соль и PBKDF2-хэш.
+ * Учётные записи и пароли проверяет сервер.
  */
 
 export const APP_NAME = 'МелМК';
@@ -11,22 +11,6 @@ export const ANIMATIONS_ENABLED = true;
 
 /** Фоновые анимации настроений по умолчанию */
 export const MOOD_BG_DEFAULT = true;
-
-/** PBKDF2: SHA-256, 200000 итераций, 32 байта */
-export const AUTH = {
-  iterations: 200000,
-  /** Логин: melmk_admin */
-  loginSalt: 'Tmfk7JYAZjBYaESmD7z6qQ==',
-  loginHash: 'bbP0L71ZiCMGLqTkgly/gRlxnQtYAgSY9ONOKuj5mr4=',
-  /** Пароль задан при сборке; в исходниках только хэш */
-  passSalt: 'NAG4RUZWyJzJknsGjZDsdw==',
-  passHash: 'ifhQyh/ilD9W3r3g+IXkln5q8L/wBmGZBarj2oQRSjc=',
-  maxAttempts: 5,
-  lockMinutes: 5,
-  sessionIdleMs: 20 * 60 * 1000,
-  storageKey: 'melmk_admin_auth_v1',
-  sessionKey: 'melmk_admin_session_v1',
-};
 
 /** Ключи localStorage */
 export const LS = {

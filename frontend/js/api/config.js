@@ -8,19 +8,6 @@ export function apiOrigin() {
   return API_ORIGIN;
 }
 
-export const ADMIN_TOKEN_KEY = 'schedule_admin_token';
-
-export function getAdminToken() {
-  try {
-    return localStorage.getItem(ADMIN_TOKEN_KEY) || '';
-  } catch {
-    return '';
-  }
-}
-
-export function setAdminToken(token) {
-  try {
-    if (token) localStorage.setItem(ADMIN_TOKEN_KEY, token);
-    else localStorage.removeItem(ADMIN_TOKEN_KEY);
-  } catch { /* ignore */ }
-}
+// Transitional capability flag for existing editors; never a credential.
+export function getAdminToken() { return 'server-session'; }
+export function setAdminToken() { localStorage.removeItem('schedule_admin_token'); }
