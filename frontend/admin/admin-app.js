@@ -1,3 +1,4 @@
+import { renderUsers } from './users.js';
 /**
  * Панель администратора МелМК — точка входа
  */
@@ -40,6 +41,7 @@ let scheduleData = null;
 let section = 'home';
 
 const SECTION_TITLES = {
+  users: 'Пользователи',
   home: 'Главная',
   schedule: 'Расписание',
   subs: 'Замены',
@@ -273,6 +275,7 @@ function renderSection() {
   ensureCatalog(scheduleData);
   clear(content);
   switch (section) {
+    case 'users': renderUsers(content); break;
     case 'home':
       renderHome(content);
       break;
