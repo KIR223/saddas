@@ -1,3 +1,4 @@
+import { renderImport } from './import.js';
 import { renderTemplate } from './template.js';
 import { renderGroups } from './groups.js';
 import { renderAudit } from './audit.js';
@@ -26,8 +27,6 @@ import {
 import { pushAudit, loadAudit, clearAudit } from '../js/utils/audit.js';
 import { toast } from '../js/utils/toast.js';
 import { el, clear, setText } from '../js/utils/dom.js';
-import { parseFile } from '../js/parser/excel.js';
-import { autoMap, rowsToSchedule } from '../js/parser/mapper.js';
 import { exportJson, exportCsv, exportIcs, printSchedule } from '../js/export/export.js';
 import { uploadAndSync } from '../js/api/sync.js';
 import { getAdminToken, setAdminToken, apiOrigin } from '../js/api/config.js';
@@ -68,7 +67,7 @@ const pageTitle = document.getElementById('adm-page-title');
 
 const fileInputExcel = document.createElement('input');
 fileInputExcel.type = 'file';
-fileInputExcel.accept = '.xlsx,.xls,.csv';
+fileInputExcel.accept = '.xlsx';
 fileInputExcel.hidden = true;
 document.body.appendChild(fileInputExcel);
 
@@ -302,7 +301,7 @@ function renderSection() {
       renderBellsEditor(content);
       break;
     case 'data':
-      renderData(content);
+      renderImport(content);
       break;
     case 'more':
       renderMore(content);
@@ -1105,66 +1104,7 @@ function validateAndShowErrors(cfg, errBox) {
 }
 
 /** —— Данные —— */
-function renderData(root) {
-  const sec = el('section', 'adm-section');
-  sec.appendChild(el('h2', 'adm-section__title', 'Расписание и импорт'));
-
-
-
-  const imp = el('div', 'adm-card');
-  imp.appendChild(el('h3', 'adm-card__title', 'Excel'));
-  const upBtn = el('button', 'btn btn--primary btn--block', 'Загрузить Excel');
-  upBtn.type = 'button';
-  upBtn.addEventListener('click', () => pickExcelUpload());
-  imp.appendChild(upBtn);
-  imp.appendChild(el('p', 'adm-muted', 'При наличии API-токена — загрузка на сервер, иначе локальный разбор.'));
-  sec.appendChild(imp);
-
-  const exp = el('div', 'adm-card');
-  exp.appendChild(el('h3', 'adm-card__title', 'Экспорт'));
-  const expList = [
-    ['JSON', () => exportJson(scheduleData)],
-    ['CSV (Excel)', () => exportCsv(scheduleData)],
-    ['ICS', () => exportIcs(scheduleData)],
-    ['Печать', () => printSchedule()],
-  ];
-  expList.forEach(([label, fn]) => {
-    const b = el('button', 'btn btn--outline btn--block', label);
-    b.type = 'button';
-    b.style.marginBottom = '8px';
-    b.addEventListener('click', () => { touchSession(); fn(); pushAudit('export', label); });
-    exp.appendChild(b);
-  });
-  sec.appendChild(exp);
-
-  const jsonCard = el('div', 'adm-card');
-  jsonCard.appendChild(el('h3', 'adm-card__title', 'Импорт JSON'));
-  const jsonBtn = el('button', 'btn btn--outline btn--block', 'Выбрать файл JSON');
-  jsonBtn.type = 'button';
-  jsonBtn.addEventListener('click', () => {
-    fileInputJson.value = '';
-    fileInputJson.click();
-  });
-  jsonCard.appendChild(jsonBtn);
-  sec.appendChild(jsonCard);
-
-  const auditSec = el('div', 'adm-card');
-  auditSec.appendChild(el('h3', 'adm-card__title', 'Журнал аудита'));
-  const auditList = el('div', '');
-  loadAudit().slice(0, 30).forEach((a) => {
-    const item = el('div', 'adm-audit-item');
-    const t = document.createElement('time');
-    t.textContent = new Date(a.at).toLocaleString('ru-RU');
-    item.appendChild(t);
-    item.appendChild(document.createTextNode(`${a.action}${a.detail ? `: ${a.detail}` : ''}`));
-    auditList.appendChild(item);
-  });
-  if (!auditList.childNodes.length) auditSec.appendChild(el('p', 'adm-muted', 'Записей пока нет'));
-  else auditSec.appendChild(auditList);
-  sec.appendChild(auditSec);
-
-  root.appendChild(sec);
-}
+function renderData(root) { renderImport(root); }
 
 function pickExcelUpload() {
   touchSession();
@@ -1186,38 +1126,12 @@ async function handleExcelFile(file) {
       renderSection();
       return;
     }
-    toast('Локальный разбор Excel…', 'info', 2000);
-    const parsed = await parseFile(file);
-    const mapping = autoMap(parsed.headers);
-    const imported = rowsToSchedule(parsed.rows, mapping, parsed.fileName);
-    scheduleData = {
-      ...imported,
-      substitutions: scheduleData?.substitutions || [],
-    };
-    await persistSchedule(false);
-    pushAudit('excel_local', parsed.fileName);
-    toast('Расписание импортировано локально', 'success');
-    renderSection();
   } catch (e) {
     toast(e.message || 'Ошибка импорта', 'error');
   }
 }
 
-async function handleJsonImport(file) {
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-    if (!data.groups) throw new Error('Неверный формат: нет groups');
-    if (!confirmDanger('Заменить текущее расписание данными из файла?')) return;
-    scheduleData = data;
-    await persistSchedule(false);
-    pushAudit('import_json', file.name);
-    toast('JSON импортирован', 'success');
-    renderSection();
-  } catch (e) {
-    toast(e.message || 'Ошибка JSON', 'error');
-  }
-}
+async function handleJsonImport() { toast('Импорт локального расписания отключён. Используйте серверный Excel.', 'warn'); }
 
 /** —— Ещё —— */
 function renderMore(root) {
