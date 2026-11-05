@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db
 from app.http import UTF8JSONResponse
-from app.routers import admin, bells, info, schedule, auth, users, teacher, groups, template
+from app.routers import admin, bells, info, schedule, auth, users, teacher, groups, template, bell_admin
 
 
 def load_dotenv(path: str = ".env") -> None:
@@ -53,6 +53,7 @@ from app.audit import router as audit_router
 app.include_router(audit_router)
 from app.perimeter import guard
 app.middleware("http")(guard)
+app.include_router(bell_admin.router)
 app.include_router(template.router)
 app.include_router(groups.router)
 app.include_router(teacher.router)

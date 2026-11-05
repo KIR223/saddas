@@ -86,11 +86,8 @@ def day_names(on: date) -> tuple[str, str]:
 
 
 def _bells_for_date(on: date) -> dict[int, dict]:
-    iso = on.isoformat()
-    slots = get_short_bells(iso)
-    if slots is None:
-        slots = get_regular_bells()
-    return {item["pair"]: item for item in slots}
+    from app.bell_config import for_date
+    return {item['pair']:item for item in for_date(on)['pairs']}
 
 
 def _pair_fields(row) -> dict:

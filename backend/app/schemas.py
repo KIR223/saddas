@@ -69,6 +69,7 @@ class BellsIn(BaseModel):
 
 
 class BellsOut(BaseModel):
+    curator: dict | None = None
     kind: str
     date: str | None = None
     pairs: list[BellSlotOut]

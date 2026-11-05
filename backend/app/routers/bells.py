@@ -11,8 +11,10 @@ router = APIRouter(tags=["bells"])
 def bells(date_value: str | None = Query(default=None, alias="date", description="YYYY-MM-DD")):
     if date_value is None:
         return bells_payload("regular", get_regular_bells())
-    on = parse_iso_date(date_value)
-    short = get_short_bells(on.isoformat())
-    if short is None:
-        return bells_payload("regular", get_regular_bells(), on.isoformat())
-    return bells_payload("short", short, on.isoformat())
+    from app.bell_config import for_date
+    return for_date(parse_iso_date(date_value))
+
+@router.get('/api/bells/config')
+def config():
+    from app.bell_config import configuration
+    return configuration()

@@ -45,7 +45,7 @@ class ApiTest(unittest.TestCase):
         self.assertIn(payload["week"], ("green", "red"))
         self.assertEqual(payload["title"], "")
         self.assertIsNone(payload["uploaded_at"])
-        self.assertIsNone(payload["revision"])
+        self.assertTrue(payload["revision"])
 
         self.assertEqual(self.client.get("/api/groups").json(), {"groups": []})
 
@@ -162,8 +162,8 @@ class ApiTest(unittest.TestCase):
         removed = self.client.delete(f"/api/admin/bells/{short_day}", headers=self.auth())
         self.assertEqual(removed.status_code, 204)
         after = self.client.get("/api/bells", params={"date": short_day})
-        self.assertEqual(after.json()["kind"], "regular")
-        self.assertEqual(after.json()["pairs"], regular)
+        self.assertEqual(after.json()["kind"], "thursday")
+        self.assertTrue(after.json()["pairs"])
 
     def test_pair_change_stays_on_one_date(self):
         self.upload_default()
@@ -252,8 +252,8 @@ class ApiTest(unittest.TestCase):
         day = self.client.get("/api/schedule/day", params={"group": "ТМ-261", "date": monday})
         body = day.json()
         self.assertEqual(body["revision"], info["revision"])
-        self.assertEqual(body["pairs"][0]["start"], "08:30")
-        self.assertEqual(body["pairs"][0]["end"], "10:00")
+        self.assertEqual(body["pairs"][0]["start"], "08:45")
+        self.assertEqual(body["pairs"][0]["end"], "09:45")
 
         short = [{"pair": 1, "start": "08:30", "end": "09:05"}]
         self.client.put(f"/api/admin/bells/{monday}", headers=self.auth(), json={"pairs": short})

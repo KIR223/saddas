@@ -93,3 +93,13 @@ class AuthTest(unittest.TestCase):
         self.assertEqual(self.client.get('/api/schedule?group=ТМ-999&week='+week).json()['days'][0]['pairs'][0]['subject'],'Физика')
         with get_conn() as c: self.assertEqual(c.execute('SELECT count(*) FROM lesson_overrides').fetchone()[0],0)
         self.assertTrue(self.client.get('/api/info').json()['revision'])
+    def test_bell_profiles_exception_and_curator(self):
+        self.client.post('/api/auth/login',json={'login':'owner','password':'test-password-123'})
+        cfg=self.client.get('/api/admin/bell-config').json()
+        self.assertEqual(self.client.get('/api/bells?date=2026-11-02').json()['curator']['day'],1)
+        cfg['exceptions']['2026-11-02']=[{'pair':1,'start':'10:00','end':'10:40'}]
+        self.assertEqual(self.client.put('/api/admin/bell-config',json=cfg).status_code,200)
+        out=self.client.get('/api/bells?date=2026-11-02').json()
+        self.assertEqual(out['pairs'][0]['start'],'10:00');self.assertIsNone(out['curator'])
+        cfg['regular']=[{'pair':1,'start':'10:00','end':'11:00'},{'pair':2,'start':'10:30','end':'11:30'}]
+        self.assertEqual(self.client.put('/api/admin/bell-config',json=cfg).status_code,400)
