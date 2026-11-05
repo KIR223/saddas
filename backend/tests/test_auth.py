@@ -62,3 +62,9 @@ class AuthTest(unittest.TestCase):
         upsert_pair_override('ТМ-1','2026-11-02',2,False,'Математика','Петров П.П.','2')
         self.assertNotIn(2,[p['pair'] for p in self.client.get('/api/teacher/schedule?date=2026-11-02').json()['days'][0]['pairs']])
         self.assertEqual(self.client.put('/api/admin/bells',json={'pairs':[]}).status_code,403)
+    def test_foreign_origin_rejected_and_production_defaults_fail(self):
+        r=self.client.post('/api/auth/login',headers={'Origin':'https://evil.example'},json={'login':'owner','password':'test-password-123'})
+        self.assertEqual(r.status_code,403)
+        from app.perimeter import validate_environment
+        with patch.dict(os.environ,APP_ENV='production',ALLOWED_ORIGINS='https://college.example',ADMIN_TOKEN='dev',COOKIE_SECURE='true'):
+            with self.assertRaises(RuntimeError): validate_environment()

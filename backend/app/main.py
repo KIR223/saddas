@@ -27,6 +27,8 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    from app.perimeter import validate_environment
+    validate_environment()
     init_db()
     from app.accounts import bootstrap_admin
     bootstrap_admin()
@@ -42,10 +44,13 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=__import__("app.perimeter", fromlist=["origins"]).origins(),
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+from app.perimeter import guard
+app.middleware("http")(guard)
 app.include_router(teacher.router)
 app.include_router(users.router)
 app.include_router(auth.router)
