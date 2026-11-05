@@ -4,7 +4,7 @@
 
 import { el, clear } from '../utils/dom.js';
 import {
-  loadBellsConfig, getCuratorForDay, computeBreaks, getMelmkWeekType, weekTypeLabel,
+  loadBellsConfig, getBellsForDay, getCuratorForDay, computeBreaks, getMelmkWeekType, weekTypeLabel,
 } from '../models/bells.js';
 import { getIsoWeekday, DAY_NAMES } from '../models/schedule.js';
 import { toMinutes, nowMinutes, formatCountdown } from '../utils/time.js';
@@ -30,6 +30,10 @@ export function renderBellsView(root) {
     root.appendChild(el('p', 'now-widget__meta', 'Сегодня выходной'));
   }
 
+  if(viewDay) {
+    const today=el('section','bells-block');today.append(el('h3','', 'Сегодня — сетка с сервера'));
+    today.append(renderTimeline(getBellsForDay(viewDay,cfg),getCuratorForDay(viewDay,cfg),{active:true}));root.append(today);
+  }
   for (const [dayNumber, title, slots] of [
     [1, 'Понедельник', cfg.monThu],
     [4, 'Четверг', cfg.thursday],
@@ -39,7 +43,7 @@ export function renderBellsView(root) {
     if (viewDay === dayNumber) heading.appendChild(el('span', 'bells-block__today', ' сегодня'));
     section.appendChild(heading);
     section.appendChild(renderTimeline(slots, getCuratorForDay(dayNumber, cfg), {
-      active: viewDay === dayNumber,
+      active: false,
     }));
     root.appendChild(section);
   }
@@ -52,7 +56,7 @@ export function renderBellsView(root) {
   }
   regular.appendChild(regTitle);
   regular.appendChild(renderTimeline(cfg.regular, null, {
-    active: viewDay === 2 || viewDay === 3 || viewDay === 5,
+    active: false,
   }));
   root.appendChild(regular);
 }

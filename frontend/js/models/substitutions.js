@@ -170,7 +170,7 @@ export function applySubstitutions(lessons, data, group, day, date = null) {
   for (const [, sub] of byPair) {
     if (sub.cancelled) continue;
     const slots = getPairTimesForDay(day);
-    const slot = slots.find((s) => s.pair === sub.pair) || slots[0];
+    const slot = slots.find((s) => s.pair === sub.pair) || {start:'',end:''};
     out.push(createLesson({
       ...(sub.lesson || {}),
       pair: sub.pair,

@@ -7,7 +7,7 @@ import {
   createEmptySchedule, createLesson, getPairTimesForDay, ensureCatalog,
 } from '../models/schedule.js';
 import { normalizeDay } from '../parser/mapper.js';
-import { loadBellsConfig, saveBellsConfig } from '../models/bells.js';
+import { installBellState } from '../models/bell-state.js';
 
 /**
  * Одна группа из ScheduleOut
@@ -34,11 +34,11 @@ export function mergeApiSchedule(data, schedule, info = {}) {
     for (const p of dayBlock.pairs || []) {
       const pair = Number(p.pair) || 0;
       if (!pair) continue;
-      const slot = daySlots.find((t) => t.pair === pair) || daySlots[0];
+      const slot = daySlots.find((t) => t.pair === pair) || {start:'',end:''};
       lessons.push(createLesson({
         pair,
-        start: p.start || slot.start,
-        end: p.end || slot.end,
+        start: p.start ?? slot.start,
+        end: p.end ?? slot.end,
         subject: String(p.subject || '').trim(),
         teacher: String(p.teacher || '').trim(),
         room: String(p.room || '').trim(),
@@ -121,26 +121,7 @@ export function mergeCatalogFromApi(data, roomsRes, teachersRes) {
  * BellsOut → локальная сетка звонков (regular)
  * @param {{ kind?: string, date?: string|null, pairs?: Array<{ pair: number, start: string, end: string }> }|null} bells
  */
-export function applyApiBells(bells) {
-  if (!bells?.pairs?.length) return loadBellsConfig();
-  const pairs = bells.pairs
-    .map((p) => ({
-      pair: Number(p.pair),
-      start: String(p.start || ''),
-      end: String(p.end || ''),
-    }))
-    .filter((p) => p.pair && p.start && p.end)
-    .sort((a, b) => a.pair - b.pair);
-
-  if (!pairs.length) return loadBellsConfig();
-
-  const cfg = loadBellsConfig();
-  // kind: regular | short | …
-  if (bells.kind === 'short') {
-    return saveBellsConfig({ ...cfg, shortDay: pairs });
-  }
-  return saveBellsConfig({ ...cfg, regular: pairs });
-}
+export function applyApiBells(config) { return installBellState(config); }
 
 /**
  * DayScheduleOut → список уроков на день (для точечного обновления)
@@ -153,11 +134,11 @@ export function lessonsFromDaySchedule(dayOut, dayKey = 1) {
   for (const p of dayOut?.pairs || []) {
     const pair = Number(p.pair) || 0;
     if (!pair) continue;
-    const slot = daySlots.find((t) => t.pair === pair) || daySlots[0];
+    const slot = daySlots.find((t) => t.pair === pair) || {start:'',end:''};
     lessons.push(createLesson({
       pair,
-      start: p.start || slot.start,
-      end: p.end || slot.end,
+      start: p.start ?? slot.start,
+      end: p.end ?? slot.end,
       subject: String(p.subject || '').trim(),
       teacher: String(p.teacher || '').trim(),
       room: String(p.room || '').trim(),

@@ -1,3 +1,4 @@
+import { bellState } from './bell-state.js';
 /**
  * Модель данных расписания
  * Иерархия: группа → день (1–6) → пара → предмет/преподаватель/кабинет/подгруппа
@@ -124,10 +125,8 @@ export function migrateWeekColors(data) {
  * @param {number|string} isoDay
  */
 export function getPairTimesForDay(isoDay) {
-  const d = Number(isoDay);
-  if (d === 1) return PAIR_TIMES_MON_THU;
-  if (d === 4) return PAIR_TIMES_THU;
-  return DEFAULT_PAIR_TIMES;
+  const cfg=bellState();
+  return Number(isoDay)===1 ? cfg.monThu : Number(isoDay)===4 ? cfg.thursday : cfg.regular;
 }
 
 export const DAY_NAMES = {
@@ -219,8 +218,8 @@ export function createLesson(partial = {}) {
   return {
     id: partial.id || genId(),
     pair,
-    start: partial.start || slot.start,
-    end: partial.end || slot.end,
+    start: partial.start ?? "",
+    end: partial.end ?? "",
     subject: partial.subject || '',
     teacher: partial.teacher || '',
     room: partial.room || '',

@@ -3,6 +3,7 @@
  */
 
 import {
+  request,
   fetchInfo,
   fetchGroups,
   fetchSchedule,
@@ -75,7 +76,8 @@ async function enrichFromApiCatalog(data) {
     console.warn('catalog sync', e);
   }
   try {
-    const bells = await fetchBells();
+    const bells = await request('/api/bells/config');
+    data.settings.bellsSnapshot = bells;
     applyApiBells(bells);
   } catch (e) {
     console.warn('bells sync', e);

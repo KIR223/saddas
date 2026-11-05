@@ -158,7 +158,7 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
     const pair = Number(p.pair) || 0;
     if (!pair) continue;
     const base = baseByPair.get(pair);
-    const slot = slots.find((s) => s.pair === pair) || slots[0];
+    const slot = slots.find((s) => s.pair === pair) || {start:'',end:''};
     const subject = String(p.subject || '').trim();
     const teacher = String(p.teacher || '').trim();
     const room = String(p.room || '').trim();
@@ -173,8 +173,8 @@ export function mergeDayScheduleOut(dayOut, baseLessons = [], dayKey = 1) {
     out.push(createLesson({
       ...(base || {}),
       pair,
-      start: p.start || base?.start || slot.start,
-      end: p.end || base?.end || slot.end,
+      start: p.start ?? "",
+      end: p.end ?? "",
       subject: cancelled ? 'Пара отменена' : subject,
       teacher: cancelled ? '' : teacher,
       room: cancelled ? '' : room,

@@ -1,3 +1,4 @@
+import { bellState, installBellState } from './bell-state.js';
 /**
  * Единый источник расписания звонков и кураторского часа МелМК
  */
@@ -47,50 +48,9 @@ export function defaultBellsConfig() {
 /**
  * @returns {BellsConfig}
  */
-export function loadBellsConfig() {
-  try {
-    const raw = localStorage.getItem(LS.bells);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const base = defaultBellsConfig();
-      return {
-        regular: parsed.regular?.length && !sameBellSlots(parsed.regular, LEGACY_PAIR_TIMES) ? parsed.regular : base.regular,
-        monThu: parsed.monThu?.length && !sameBellSlots(parsed.monThu, LEGACY_PAIR_TIMES) ? parsed.monThu : base.monThu,
-        thursday: parsed.thursday?.length ? parsed.thursday : base.thursday,
-        shortDay: parsed.shortDay?.length ? parsed.shortDay : base.shortDay,
-        curator: {
-          ...base.curator, ...(parsed.curator || {}),
-          byDay: { ...base.curator.byDay, ...(parsed.curator?.byDay || {}) },
-        },
-      };
-    }
-  } catch (e) {
-    console.warn('bells load', e);
-  }
-  return defaultBellsConfig();
-}
-
-/**
- * @param {Partial<BellsConfig>} partial
- */
-export function saveBellsConfig(partial) {
-  const next = { ...loadBellsConfig(), ...partial };
-  if (partial.curator) next.curator = { ...loadBellsConfig().curator, ...partial.curator };
-  try {
-    localStorage.setItem(LS.bells, JSON.stringify(next));
-  } catch (e) {
-    console.warn('bells save', e);
-  }
-  return next;
-}
-
-export function resetBellsConfig() {
-  const d = defaultBellsConfig();
-  try {
-    localStorage.setItem(LS.bells, JSON.stringify(d));
-  } catch { /* ignore */ }
-  return d;
-}
+export function loadBellsConfig() { return bellState(); }
+export function saveBellsConfig() { throw new Error('Сохраняйте звонки через серверный редактор'); }
+export function resetBellsConfig() { throw new Error('Сброс локальных звонков отключён'); }
 
 /**
  * Слоты пар для дня (без кураторского часа)
@@ -100,6 +60,9 @@ export function resetBellsConfig() {
  */
 export function getBellsForDay(isoDay, cfg = loadBellsConfig(), opts = {}) {
   if (opts.short) return cfg.shortDay.map((x) => ({ ...x }));
+  const today = moscowNow();
+  const key = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  if (Number(isoDay) === (today.getDay()||7) && cfg.exceptions?.[key]) return cfg.exceptions[key].map(x=>({...x}));
   const d = Number(isoDay);
   if (d === 1) return cfg.monThu.map((x) => ({ ...x }));
   if (d === 4) return cfg.thursday.map((x) => ({ ...x }));
@@ -112,6 +75,9 @@ export function getBellsForDay(isoDay, cfg = loadBellsConfig(), opts = {}) {
  * @param {BellsConfig} [cfg]
  */
 export function getCuratorForDay(isoDay, cfg = loadBellsConfig()) {
+  const today=moscowNow();
+  const key=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  if (Number(isoDay)===(today.getDay()||7) && cfg.exceptions?.[key]) return null;
   if (!cfg.curator?.enabled) return null;
   const days = cfg.curator.days || [];
   if (!days.includes(Number(isoDay))) return null;

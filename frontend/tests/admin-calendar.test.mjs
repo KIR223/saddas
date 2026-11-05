@@ -1,3 +1,6 @@
+import { defaultBellsConfig } from '../js/models/bells.js';
+import { installBellState } from '../js/models/bell-state.js';
+installBellState({...defaultBellsConfig(),curators:[],exceptions:{}});
 import assert from 'node:assert/strict';
 import { fetchCalendarSchedule } from '../js/api/sync.js';
 import { buildFromApi } from '../js/api/adapt.js';
