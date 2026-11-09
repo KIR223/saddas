@@ -46,29 +46,29 @@ import { moscowNow } from '../utils/time.js';
  * Пн — PAIR_TIMES_MON_THU, чт — PAIR_TIMES_THU
  */
 export const DEFAULT_PAIR_TIMES = [
-  { pair: 1, start: '08:30', end: '09:30' },
-  { pair: 2, start: '09:35', end: '10:35' },
-  { pair: 3, start: '10:40', end: '11:40' },
-  { pair: 4, start: '12:10', end: '13:10' },
-  { pair: 5, start: '13:15', end: '14:15' },
+  { pair: 1, start: '08:30', end: '09:00' },
+  { pair: 2, start: '09:05', end: '09:35' },
+  { pair: 3, start: '09:40', end: '10:10' },
+  { pair: 4, start: '10:15', end: '10:45' },
+  { pair: 5, start: '10:50', end: '11:20' },
 ];
 
 /** Звонки понедельника (имя экспорта сохранено для совместимости) */
 export const PAIR_TIMES_MON_THU = [
-  { pair: 1, start: '08:45', end: '09:45' },
-  { pair: 2, start: '09:50', end: '10:50' },
-  { pair: 3, start: '10:55', end: '11:55' },
-  { pair: 4, start: '12:25', end: '13:25' },
-  { pair: 5, start: '13:30', end: '14:30' },
+  { pair: 1, start: '08:35', end: '09:05' },
+  { pair: 2, start: '09:10', end: '09:40' },
+  { pair: 3, start: '09:45', end: '10:15' },
+  { pair: 4, start: '10:20', end: '10:50' },
+  { pair: 5, start: '10:55', end: '11:25' },
 ];
 
 /** Звонки четверга */
 export const PAIR_TIMES_THU = [
-  { pair: 1, start: '09:15', end: '10:15' },
-  { pair: 2, start: '10:20', end: '11:20' },
-  { pair: 3, start: '11:25', end: '12:25' },
-  { pair: 4, start: '12:55', end: '13:55' },
-  { pair: 5, start: '14:00', end: '15:00' },
+  { pair: 1, start: '09:05', end: '09:35' },
+  { pair: 2, start: '09:40', end: '10:10' },
+  { pair: 3, start: '10:15', end: '10:45' },
+  { pair: 4, start: '10:50', end: '11:20' },
+  { pair: 5, start: '11:25', end: '11:55' },
 ];
 
 /** Прежние стандартные времена: для обновления сохранённых данных. */
@@ -482,4 +482,5 @@ export function diffLessons(prev, next) {
   }
   return changed;
 }
+
 

@@ -35,11 +35,11 @@ export function defaultBellsConfig() {
       enabled: true,
       days: [1, 4], // пн, чт
       start: '08:00',
-      end: '08:40',
+      end: '08:30',
       title: 'Разговор о важном',
       byDay: {
-        1: { start: '08:00', end: '08:40', title: 'Разговор о важном' },
-        4: { start: '08:30', end: '09:10', title: 'Россия — мои горизонты' },
+        1: { start: '08:00', end: '08:30', title: 'Разговор о важном' },
+        4: { start: '08:30', end: '09:00', title: 'Россия — мои горизонты' },
       },
     },
   };
@@ -177,4 +177,5 @@ export function getIsoWeekNumber(date) {
 export function weekTypeLabel(type) {
   return type === 'green' ? 'Зелёная' : type === 'red' ? 'Красная' : 'Текущая';
 }
+
 
